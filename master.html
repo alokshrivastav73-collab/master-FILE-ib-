@@ -1,0 +1,2383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Operations Master Command Center — OSSLA, YMS & TAT</title>
+<!-- Global Libraries & Icons -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* Master Navigation Bar & 4-Box Styling */
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:#0b0f19;}
+.master-navigation-bar { background: #0b0f19; border-bottom: 2px solid #2563eb; padding: 12px 20px; display: flex; gap: 8px; justify-content: center; align-items: center; position: sticky; top: 0; z-index: 99999; font-family: Arial, sans-serif; flex-wrap: wrap; }
+.master-navigation-bar button { border: 0; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; background: #1e293b; color: #94a3b8; font-size: 14px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.master-navigation-bar button.active { background: #2563eb; color: #fff; }
+ 
+/* Isolation Rules */
+.master-section { display: none !important; }
+.master-section.active { display: block !important; }
+ 
+/* Master Hub 4-Box Layout */
+.hub-page-container { max-width: 1400px; margin: 30px auto; padding: 20px; text-align: center; font-family: Arial, sans-serif; background: #0b0f19; min-height: 100vh; }
+.hub-page-container h1 { font-size: 32px; color: #f8fafc; margin-bottom: 10px; }
+.hub-page-container p { color: #94a3b8; font-size: 15px; margin-bottom: 30px; }
+.hub-4box-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; max-width: 1100px; margin: 0 auto; }
+.hub-single-box { background: #131b2e; border: 2px solid #1e293b; border-radius: 16px; padding: 30px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.hub-single-box:hover { transform: translateY(-6px); border-color: #3b82f6; box-shadow: 0 15px 30px rgba(59,130,246,0.2); }
+.hub-box-ico { font-size: 32px; color: #3b82f6; margin-bottom: 15px; background: rgba(59, 130, 246, 0.1); width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid rgba(59, 130, 246, 0.2); }
+.hub-single-box h3 { font-size: 20px; color: #f8fafc; margin: 0 0 8px 0; }
+.hub-single-box p { font-size: 13px; color: #94a3b8; margin: 0 0 20px 0; line-height: 1.5; }
+.hub-single-box button { background: #3b82f6; color: #fff; border: 0; padding: 9px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+@media(max-width: 900px) { .hub-4box-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+ 
+<!-- Master Navigation Bar -->
+<div class="master-navigation-bar">
+    <button class="active" onclick="showMasterSystem('hubRoot', this)"><i class="fa-solid fa-border-all"></i> Master Hub (4 Boxes)</button>
+    <button onclick="showMasterSystem('tatRoot', this)"><i class="fa-solid fa-clock"></i> TAT Report</button>
+    <button onclick="showMasterSystem('ymsRoot', this)"><i class="fa-solid fa-truck-fast"></i> YMS Compliance</button>
+    <button onclick="showMasterSystem('osslaRoot', this)"><i class="fa-solid fa-boxes-stacked"></i> OSSLA & ISS</button>
+    <button onclick="showMasterSystem('masterSummaryRoot', this)"><i class="fa-solid fa-chart-pie"></i> Master Summary</button>
+</div>
+ 
+<!-- ================= 1. MASTER HUB (4 Boxes Dashboard) ================= -->
+<div id="hubRoot" class="master-section active">
+    <div class="hub-page-container">
+       <h1>Operations Master Command Hub</h1>
+        <p>Aapke teeno core reports aur combined performance overview ab is 4-box dashboard me ek sath available hain:</p>
+        
+        <div class="hub-4box-grid">
+            <div class="hub-single-box" onclick="showMasterSystem('tatRoot', document.querySelectorAll('.master-navigation-bar button')[1])">
+               <div class="hub-box-ico"><i class="fa-solid fa-clock"></i></div>
+               <h3>1. TAT Report Dashboard</h3>
+               <p>Operations & Sideline Performance, Dockmaster & YMS ISA matching, aur 95th Percentile analysis.</p>
+               <button>Open TAT Report</button>
+            </div>
+            <div class="hub-single-box" onclick="showMasterSystem('ymsRoot', document.querySelectorAll('.master-navigation-bar button')[2])">
+               <div class="hub-box-ico"><i class="fa-solid fa-truck-fast"></i></div>
+               <h3>2. YMS Compliance</h3>
+               <p>Inbound Stow & Gate Operations compliance tracking, Carrier Defect distribution, aur IST event conversion.</p>
+               <button>Open YMS Compliance</button>
+            </div>
+            <div class="hub-single-box" onclick="showMasterSystem('osslaRoot', document.querySelectorAll('.master-navigation-bar button')[3])">
+               <div class="hub-box-ico"><i class="fa-solid fa-boxes-stacked"></i></div>
+               <h3>3. OSSLA & ISS Command Center</h3>
+               <p>Container dwell analysis, OSSLA Miss tracking, aur automated XLOOKUP ASIN matching with ISS titles.</p>
+               <button>Open OSSLA & ISS</button>
+            </div>
+            <div class="hub-single-box" style="border-color: #a855f7;" onclick="showMasterSystem('masterSummaryRoot', document.querySelectorAll('.master-navigation-bar button')[4])">
+               <div class="hub-box-ico" style="color: #a855f7; background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2);"><i class="fa-solid fa-chart-pie"></i></div>
+                <h3 style="color: #c084fc;">4. Master Summary Overview</h3>
+               <p>Teeno reports (TAT, YMS, OSSLA) ka combined health score, total throughput aur critical alerts ek sath.</p>
+               <button style="background: #a855f7;">View Master Summary</button>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+<!-- ================= 2. TAT REPORT WEBSITE ================= -->
+<div id="tatRoot" class="master-section">
+<style>
+#tatRoot{background:#f4f6f8;color:#17202a;min-height:100vh}
+#tatRoot *{box-sizing:border-box}
+#tatRoot header{background:#111827;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+#tatRoot h1{margin:0;font-size:22px} #tatRoot header small{opacity:.75} #tatRoot .status{font-size:13px}
+#tatRoot nav{background:#fff;border-bottom:1px solid #ddd;padding:10px 20px;display:flex;gap:8px;position:sticky;top:49px;z-index:5}
+#tatRoot nav button{border:0;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer;background:#eef2f7}
+#tatRoot nav button.active{background:#2563eb;color:#fff}
+#tatRoot main{max-width:1500px;margin:auto;padding:20px}
+#tatRoot .page{display:none} #tatRoot .page.active{display:block}
+#tatRoot .panel{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:18px}
+#tatRoot .uploads{display:grid;grid-template-columns:repeat(3,1fr);gap:14px} #tatRoot .upload{border:2px dashed #94a3b8;border-radius:10px;padding:18px;background:#f8fafc}
+#tatRoot .upload h3{margin-top:0}
+#tatRoot button.primary{background:#2563eb;color:white;border:0;padding:10px 16px;border-radius:7px;font-weight:700;cursor:pointer}
+#tatRoot button.secondary{background:#fff;border:1px solid #cbd5e1;padding:10px 16px;border-radius:7px;cursor:pointer}
+#tatRoot .cards{display:grid;grid-template-columns:repeat(6,1fr);gap:15px;margin-bottom:18px}
+#tatRoot .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.03)}
+#tatRoot .label{font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase; letter-spacing:0.5px;}
+#tatRoot .value{font-size:32px;font-weight:800;margin-top:10px;} 
+#tatRoot .text-success{color:#16a34a !important;} #tatRoot .text-danger{color:#dc2626 !important;} #tatRoot .text-warning{color:#d97706 !important;} #tatRoot .text-dark{color:#1e293b !important;}    
+#tatRoot .tablewrap{overflow:auto;max-height:560px;border:1px solid #e5e7eb;border-radius:8px} #tatRoot table{width:100%;border-collapse:collapse;font-size:13px}
+#tatRoot th,#tatRoot td{padding:9px;border-bottom:1px solid #e5e7eb;white-space:nowrap;text-align:left} #tatRoot th{background:#f8fafc;position:sticky;top:0}
+#tatRoot .badge{padding:4px 7px;border-radius:999px;font-size:11px;font-weight:700} #tatRoot .good{background:#dcfce7;color:#166534} #tatRoot .late{background:#fee2e2;color:#991b1b} #tatRoot .neutral{background:#e2e8f0;color:#475569}
+#tatRoot .miss-badge{padding:4px 7px;border-radius:999px;font-size:11px;font-weight:700} #tatRoot .miss-yes{background:#fee2e2;color:#991b1b} #tatRoot .miss-no{background:#dcfce7;color:#166534}
+#tatRoot .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px} #tatRoot .note{color:#64748b;font-size:13px;line-height:1.5}
+#tatRoot .chart-container { position: relative; height: 300px; width: 100%; display: flex; justify-content: center;}
+@media(max-width:1200px){#tatRoot .cards{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){#tatRoot .uploads,#tatRoot .grid{grid-template-columns:1fr}#tatRoot .cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){#tatRoot .cards{grid-template-columns:repeat(1,1fr)}}
+</style>
+<header><div><h1>TAT REPORT</h1><small>Operations & Sideline Performance Dashboard</small></div><div class="status" id="tat_status">Ready</div></header>
+<nav>
+<button class="active" onclick="tat_page('dash',this)">Dashboard</button>
+<button onclick="tat_page('input',this)">Daily Data</button>
+<button onclick="tat_page('report',this)">Detailed Report</button>
+<button onclick="tat_page('help',this)">How to Use</button>
+</nav>
+<main>
+<section id="tat_input" class="page">
+<div class="panel"><h2>Daily Data</h2>
+<p class="note"><b>Upload inputs:</b> Dockmaster CSV, YMS CSV, and JIRA data (Optional).</p>
+<div class="uploads">
+<div class="upload"><h3>1. Dockmaster</h3><input id="tat_dockFile" type="file" accept=".csv"></div>
+<div class="upload"><h3>2. YMS</h3><input id="tat_ymsFile" type="file" accept=".csv"></div>
+<div class="upload">
+    <h3>3. JIRA ISA (Optional)</h3>
+    <input id="tat_jiraFile" type="file" accept=".csv,.txt" style="margin-bottom:8px;">
+    <textarea id="tat_jiraManualText" placeholder="Optional: Paste JIRA ISAs here if any..." style="width:100%; height:90px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; resize:vertical;"></textarea>
+</div>
+</div><br>
+<button class="primary" onclick="tat_processFiles()">PROCESS REPORT</button>
+<button class="secondary" onclick="tat_loadDemo()">Load Demo</button>
+<button class="secondary" onclick="tat_resetAll()">Reset</button>
+<div id="tat_fileNames" class="note" style="margin-top:12px"></div>
+</div>
+</section>
+<section id="tat_dash" class="page active">
+<div class="panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="text" id="tat_fcCodeInput" value="HBA4" oninput="updateHeaderFc()" style="font-size: 22px; font-weight: 900; color: #1e293b; width: 130px; padding: 6px 10px; border: 2px solid #cbd5e1; border-radius: 8px; text-transform: uppercase; outline: none; background: #f8fafc;">
+            <span id="fcTatLabel" style="font-size: 24px; font-weight: 900; color: #1e293b; letter-spacing: 0.5px;">HBA4 TAT</span>
+        </div> 
+        <div style="display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <label style="font-size: 16px; font-weight: bold; color: #475569;">From:</label>
+            <input type="date" id="tat_fromDateFilter" onchange="tat_render()" style="font-size: 15px; font-weight: bold; padding: 8px 12px; border: 2px solid #cbd5e1; border-radius: 8px; color: #1e293b; cursor: pointer; outline: none;">
+            <label style="font-size: 16px; font-weight: bold; color: #475569; margin-left: 5px;">To:</label>
+            <input type="date" id="tat_toDateFilter" onchange="tat_render()" style="font-size: 15px; font-weight: bold; padding: 8px 12px; border: 2px solid #cbd5e1; border-radius: 8px; color: #1e293b; cursor: pointer; outline: none;">
+            <button class="secondary" onclick="tat_clearDate()" style="font-size: 15px; font-weight: bold; padding: 9px 15px; border: 2px solid #cbd5e1; border-radius: 8px; cursor: pointer; color: #1e293b;">All Dates</button>
+        </div>
+        <div>
+            <button class="primary" onclick="tat_downloadCSV()" style="font-size: 14px; padding: 12px 20px; border-radius: 8px;">Download Report CSV</button>
+        </div>
+    </div>
+</div>
+<div class="cards">
+    <div class="card"><div class="label text-success">ONTIME 95th PERCENTILE</div><div class="value" id="tat_on95">—</div></div>
+    <div class="card"><div class="label text-success">ONTIME TARGET</div><div class="value text-success">3 HRS</div></div>
+    <div class="card"><div class="label text-danger">LATE 95th PERCENTILE</div><div class="value" id="tat_late95">—</div></div>
+    <div class="card"><div class="label text-danger">LATE TARGET</div><div class="value text-danger">10 HRS</div></div>
+    <div class="card"><div class="label text-warning">SIDELINE 95th</div><div class="value" id="tat_side95">—</div></div>
+    <div class="card"><div class="label text-warning">SIDELINE TARGET</div><div class="value text-warning">10 HRS</div></div>
+</div>
+<div class="panel">
+    <h2>Overall Performance</h2>
+    <div class="grid">
+        <div><div class="label text-dark">OVERALL 95th PERCENTILE</div><div class="value text-dark" id="tat_overall95">—</div></div>
+        <div><div class="label text-dark">ISA CLOSED</div><div class="value text-dark" id="tat_count">0</div></div>
+    </div>
+</div>
+<div class="panel" id="tat_chartsPanel" style="display:none;">
+    <h2>Visual Analytics</h2>
+    <div class="grid">
+        <div class="chart-container"><canvas id="tat_statusChart"></canvas></div>
+        <div class="chart-container"><canvas id="tat_tatChart"></canvas></div>
+    </div>
+</div>
+</section>
+<section id="tat_report" class="page">
+<div class="panel"><h2>Detailed Report</h2>
+<div class="tablewrap"><table><thead><tr>
+<th>Appointment ID</th><th>Schedule/ISA Time</th><th>Closed</th><th>Pre Check-in</th><th>Status</th><th>Sideline/JIRA</th><th>JIRA Issue</th><th>TAT Hrs</th><th>TAT Miss</th>
+</tr></thead><tbody id="tat_tbody"></tbody></table></div></div>
+</section>
+<section id="tat_help" class="page">
+<div class="panel"><h2>How to Use</h2>
+<ol>
+<li><b>Dockmaster:</b> Appointment Browser → Status Closed → select date → required columns → Submit → Export CSV → upload the CSV here.</li>
+<li><b>YMS:</b> Yard Management → Event History → Event Type = PRE_CHECK_IN only → select date → ISA NO only → export CSV → upload here.</li>
+<li><b>JIRA ISA (Optional):</b> Upload JIRA file (filtered by FC code) or paste ISA numbers directly into the JIRA box.</li>
+<li><b>Processing:</b> Appointment ID is matched with YMS ISA. The YMS UTC timestamp is converted to IST (+5:30).</li>
+<li><b>Status:</b> If PRE CHECK-IN − ISA APP is ≤ 30 minutes → <b>On Time</b>; otherwise → <b>Late</b>.</li>
+<li><b>TAT Miss Logic:</b> On Time > 3 hrs = TAT Miss (else Not Miss); Late/Sideline > 10 hrs = TAT Miss (else Not Miss).</li>
+<li><b>Dockmaster Required Columns:</b> Appointment Id | Type | Carrier | CRDD | Schedule Date | Expected Arrival Date | Timer(HHH:MM) | Percent Need | Priority Score | Priority Score Last Updated Date | Status | Pallets | Cartons | Units | Dock | CheckIn Date | Closed Date.</li>
+</ol>
+<p class="note"><b>Important:</b> Dashboard ready for operations.</p>
+</div>
+</section>
+</main>
+</div>
+ 
+<!-- ================= 3. YMS COMPLIANCE WEBSITE ================= -->
+<div id="ymsRoot" class="master-section">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title>YMS Compliance Report - Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+            #ymsRoot .yms-local-body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+            #ymsRoot .glass-card { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #e5e7eb; transition: transform 0.2s; }
+            #ymsRoot .glass-card:hover { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); }
+            #ymsRoot .gradient-bg { background: linear-gradient(135deg, #111827 0%, #1e3a8a 100%); }
+            #ymsRoot .defect-row { background-color: #fff1f2 !important; }
+            #ymsRoot .success-row { background-color: #f8fafc !important; }
+            #ymsRoot #results-section { display: none; animation: slideUp 0.6s ease-out forwards; }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            #ymsRoot .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+            #ymsRoot .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+            #ymsRoot .btn-hover-effect { transition: all 0.2s ease-in-out; }
+            #ymsRoot .btn-hover-effect:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+            @media print {
+               #ymsRoot .yms-local-body { background-color: #ffffff; }
+               #ymsRoot .no-print { display: none !important; }
+               #ymsRoot .glass-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; margin-bottom: 20px; }
+               #ymsRoot #results-section { display: block !important; }
+               #ymsRoot canvas { max-width: 100% !important; height: auto !important; }
+               #ymsRoot .print-grid { display: block; }
+               #ymsRoot input { border: none !important; background: transparent !important; box-shadow: none !important; }
+            }
+        </style>
+    </head>
+    <body class="yms-local-body text-slate-800" onload="updateLiveTime()">
+        <nav class="gradient-bg text-white shadow-xl py-5 px-6 mb-8 no-print">
+            <div class="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between">
+               <div class="flex items-center space-x-4">
+                  <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
+                      <i class="fa-solid fa-chart-line text-2xl text-blue-300"></i>
+                  </div>
+                  <div>
+                      <h1 class="font-extrabold text-2xl tracking-tight">Executive YMS Dashboard</h1>
+                      <p class="text-sm text-blue-200 font-medium tracking-wide">Inbound Stow & Gate Operations Compliance</p>
+                  </div>
+               </div>
+               <div class="mt-4 md:mt-0 flex items-center space-x-4 bg-black/30 py-2 px-5 rounded-full border border-white/10 shadow-inner">
+                    <i class="fa-regular fa-clock text-blue-300"></i>
+                  <span id="live-time" class="text-sm font-semibold tracking-wide">Loading time...</span>
+               </div>
+            </div>
+        </nav>
+        <div class="max-w-screen-2xl mx-auto px-6 pb-12">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 no-print">
+               <div class="glass-card p-6 border-t-4 border-t-blue-600 relative">
+                  <div class="flex justify-between items-center mb-4 border-b pb-3">
+                      <h3 class="font-bold text-slate-800 text-lg flex items-center">
+                          <i class="fa-solid fa-file-invoice text-blue-600 mr-2 text-xl"></i> Dockmaster Report
+                      </h3>
+                      <input type="file" id="dm-file-upload" class="hidden" accept=".xlsx, .xls, .csv" style="display:none;" />
+                      <button onclick="document.getElementById('dm-file-upload').click()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold py-2 px-4 rounded-lg border border-slate-300 transition cursor-pointer">
+                          <i class="fa-solid fa-upload mr-1"></i> Upload
+                      </button>
+                  </div>
+                  <textarea id="dm-data" rows="3" class="w-full border rounded-lg p-3 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar" placeholder="Paste Dockmaster Data..."></textarea>
+                  <div id="dm-status" class="text-xs font-bold mt-3 hidden px-3 py-2 rounded-md bg-blue-50 text-blue-600"></div>
+               </div>
+               <div class="glass-card p-6 border-t-4 border-t-indigo-600 relative">
+                  <div class="flex justify-between items-center mb-4 border-b pb-3">
+                      <h3 class="font-bold text-slate-800 text-lg flex items-center">
+                          <i class="fa-solid fa-truck-fast text-indigo-600 mr-2 text-xl"></i> YMS Event History
+                      </h3>
+                      <input type="file" id="yms-file-upload" class="hidden" accept=".xlsx, .xls, .csv" style="display:none;" />
+                      <button onclick="document.getElementById('yms-file-upload').click()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold py-2 px-4 rounded-lg border border-slate-300 transition cursor-pointer">
+                          <i class="fa-solid fa-upload mr-1"></i> Upload
+                      </button>
+                  </div>
+                  <textarea id="yms-data" rows="3" class="w-full border rounded-lg p-3 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 custom-scrollbar" placeholder="Paste YMS Event Data..."></textarea>
+                  <div id="yms-status" class="text-xs font-bold mt-3 hidden px-3 py-2 rounded-md bg-indigo-50 text-indigo-600"></div>
+               </div>
+            </div>
+            <div class="flex justify-center mb-10 no-print">
+               <button onclick="processVerification()" class="gradient-bg text-white font-extrabold py-4 px-12 rounded-xl text-lg flex items-center btn-hover-effect shadow-xl cursor-pointer">
+                   <i class="fa-solid fa-bolt text-yellow-400 mr-3 text-xl"></i> Generate Executive Report
+               </button>
+            </div>
+            <div id="results-section">
+               <div class="flex flex-col md:flex-row md:items-start justify-between mb-8 pb-6 border-b-2 border-slate-200">
+                  <div>
+                      <h2 class="text-3xl font-black text-slate-800">YMS Compliance Report</h2>
+                      <div class="flex flex-wrap items-center gap-4 mt-5">
+                          <div class="flex items-center bg-blue-50 border border-blue-200 px-5 py-3 rounded-xl shadow-sm">
+                              <i class="fa-regular fa-calendar-check text-blue-600 text-3xl mr-4"></i>
+                              <div class="flex flex-col">
+                                  <span class="text-xs text-blue-600 font-bold uppercase tracking-widest mb-1">Target Date</span>
+                                  <span id="data-date-display" class="text-2xl md:text-3xl font-black text-blue-800 tracking-tight">Detecting...</span>
+                              </div>
+                          </div>
+                          <div class="flex items-center bg-indigo-50 border border-indigo-200 px-5 py-3 rounded-xl shadow-sm">
+                              <i class="fa-solid fa-warehouse text-indigo-600 text-3xl mr-4"></i>
+                              <div class="flex flex-col">
+                                  <span class="text-xs text-indigo-600 font-bold uppercase tracking-widest mb-1">FC Code</span>
+                                  <input type="text" placeholder="e.g. HBA4" class="text-2xl md:text-3xl font-black text-indigo-800 tracking-tight bg-transparent border-none outline-none focus:ring-0 p-0 w-32 md:w-40 uppercase placeholder-indigo-300" oninput="this.value = this.value.toUpperCase()">
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="flex items-center space-x-3 mt-6 md:mt-0 no-print">
+                      <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-lg btn-hover-effect flex items-center shadow-md cursor-pointer">
+                          <i class="fa-solid fa-file-pdf mr-2"></i> Export PDF
+                      </button>
+                      <button onclick="downloadCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg btn-hover-effect flex items-center shadow-md cursor-pointer">
+                          <i class="fa-solid fa-file-csv mr-2"></i> Download CSV
+                      </button>
+                  </div>
+               </div>
+               <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 print-grid">
+                  <div class="glass-card p-6 flex items-center justify-between bg-slate-800 text-white border-0">
+                      <div>
+                          <p class="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2">Compliance Score (Closed)</p>
+                          <h2 class="text-5xl font-black text-emerald-400 drop-shadow-md" id="kpi-score">0%</h2>
+                      </div>
+                      <i class="fa-solid fa-chart-pie text-5xl text-slate-600"></i>
+                  </div>
+                  <div class="glass-card p-6 flex items-center justify-between">
+                      <div>
+                           <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Tracked ISAs</p>
+                          <h2 class="text-5xl font-black text-slate-800" id="kpi-total">0</h2>
+                      </div>
+                      <i class="fa-solid fa-cubes text-5xl text-slate-200"></i>
+                  </div>
+                  <div class="glass-card p-6 flex items-center justify-between border-l-4 border-rose-500">
+                      <div>
+                          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Defects</p>
+                          <h2 class="text-5xl font-black text-rose-600" id="kpi-defects">0</h2>
+                          <p class="text-xs text-rose-500 font-bold mt-1 uppercase">Requires Action</p>
+                      </div>
+                      <i class="fa-solid fa-triangle-exclamation text-5xl text-rose-100"></i>
+                  </div>
+               </div>
+               <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 print-grid">
+                  <div class="glass-card flex flex-col border-t-8 border-slate-600 overflow-hidden">
+                      <div class="bg-slate-50 p-5 border-b border-slate-200 flex justify-between items-center">
+                          <h3 class="font-extrabold text-slate-800 text-lg tracking-wide"><i class="fa-solid fa-box-open mr-2 text-slate-500"></i>CLOSED</h3>
+                          <span class="bg-slate-200 text-slate-800 px-4 py-1 rounded-full font-black text-xl shadow-inner" id="kpi-closed-total">0</span>
+                      </div>
+                      <div class="p-6 flex-grow flex flex-col justify-center space-y-6">
+                          <div>
+                               <div class="flex justify-between items-end mb-1">
+                                   <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">PRE_CHECK_IN</span>
+                                   <div class="flex items-baseline space-x-2">
+                                      <span class="font-black text-blue-600 text-2xl leading-none" id="kpi-closed-in">0</span>
+                                      <span class="text-sm font-bold text-blue-400" id="kpi-closed-in-perc">(0%)</span>
+                                   </div>
+                               </div>
+                               <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                   <div class="bg-blue-500 h-full rounded-full transition-all duration-1000" id="bar-closed-in" style="width:0%"></div>
+                               </div>
+                          </div>
+                          <div>
+                               <div class="flex justify-between items-end mb-1">
+                                   <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">IB_DOCK_COMPLETED</span>
+                                   <div class="flex items-baseline space-x-2">
+                                      <span class="font-black text-indigo-600 text-2xl leading-none" id="kpi-closed-out">0</span>
+                                      <span class="text-sm font-bold text-indigo-400" id="kpi-closed-out-perc">(0%)</span>
+                                   </div>
+                               </div>
+                               <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                  <div class="bg-indigo-500 h-full rounded-full transition-all duration-1000" id="bar-closed-out" style="width:0%"></div>
+                               </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="glass-card flex flex-col border-t-8 border-blue-500 overflow-hidden">
+                      <div class="bg-blue-50 p-5 border-b border-blue-100 flex justify-between items-center">
+                          <h3 class="font-extrabold text-blue-800 text-lg tracking-wide"><i class="fa-solid fa-truck-ramp-box mr-2 text-blue-500"></i>ARRIVED</h3>
+                          <span class="bg-blue-200 text-blue-800 px-4 py-1 rounded-full font-black text-xl shadow-inner" id="kpi-arrived-total">0</span>
+                      </div>
+                      <div class="p-6 flex-grow flex flex-col justify-center space-y-6">
+                          <div>
+                              <div class="flex justify-between items-end mb-1">
+                                   <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">PRE_CHECK_IN</span>
+                                   <div class="flex items-baseline space-x-2">
+                                      <span class="font-black text-blue-600 text-2xl leading-none" id="kpi-arrived-in">0</span>
+                                      <span class="text-sm font-bold text-blue-400" id="kpi-arrived-in-perc">(0%)</span>
+                                   </div>
+                              </div>
+                              <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                   <div class="bg-blue-500 h-full rounded-full transition-all duration-1000" id="bar-arrived-in" style="width:0%"></div>
+                              </div>
+                          </div>
+                          <div>
+                               <div class="flex justify-between items-end mb-1">
+                                   <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">IB_DOCK_COMPLETED</span>
+                                   <div class="flex items-baseline space-x-2">
+                                      <span class="font-black text-indigo-600 text-2xl leading-none" id="kpi-arrived-out">0</span>
+                                      <span class="text-sm font-bold text-indigo-400" id="kpi-arrived-out-perc">(0%)</span>
+                                   </div>
+                               </div>
+                               <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                  <div class="bg-indigo-500 h-full rounded-full transition-all duration-1000" id="bar-arrived-out" style="width:0%"></div>
+                               </div>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="glass-card flex flex-col border-t-8 border-amber-500 overflow-hidden">
+                      <div class="bg-amber-50 p-5 border-b border-amber-100 flex justify-between items-center">
+                          <h3 class="font-extrabold text-amber-800 text-lg tracking-wide"><i class="fa-solid fa-clock-rotate-left mr-2 text-amber-500"></i>SCHEDULED</h3>
+                          <span class="bg-amber-200 text-amber-800 px-4 py-1 rounded-full font-black text-xl shadow-inner" id="kpi-sched-total">0</span>
+                      </div>
+                      <div class="p-6 flex-grow flex flex-col justify-center space-y-6">
+                          <div>
+                               <div class="flex justify-between items-end mb-1">
+                                   <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">PRE_CHECK_IN</span>
+                                   <div class="flex items-baseline space-x-2">
+                                      <span class="font-black text-blue-600 text-2xl leading-none" id="kpi-sched-in">0</span>
+                                      <span class="text-sm font-bold text-blue-400" id="kpi-sched-in-perc">(0%)</span>
+                                   </div>
+                               </div>
+                               <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                   <div class="bg-blue-500 h-full rounded-full transition-all duration-1000" id="bar-sched-in" style="width:0%"></div>
+                               </div>
+                          </div>
+                          <div>
+                               <div class="flex justify-between items-end mb-1">
+                                   <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">IB_DOCK_COMPLETED</span>
+                                   <div class="flex items-baseline space-x-2">
+                                      <span class="font-black text-indigo-600 text-2xl leading-none" id="kpi-sched-out">0</span>
+                                      <span class="text-sm font-bold text-indigo-400" id="kpi-sched-out-perc">(0%)</span>
+                                   </div>
+                               </div>
+                               <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                  <div class="bg-indigo-500 h-full rounded-full transition-all duration-1000" id="bar-sched-out" style="width:0%"></div>
+                               </div>
+                          </div>
+                      </div>
+                  </div>
+               </div>
+               <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 print-grid">
+                  <div class="glass-card p-6 flex flex-col justify-center">
+                      <h3 class="text-slate-800 font-extrabold text-lg mb-4 border-b pb-2"><i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i>Executive Insights</h3>
+                      <p id="executive-summary-text" class="text-slate-600 text-[15px] leading-relaxed font-medium">Processing data to generate insights...</p>
+                  </div>
+                  <div class="glass-card p-6 flex flex-col items-center">
+                      <h3 class="font-extrabold text-slate-800 text-lg mb-4 self-start w-full border-b pb-2">Overall Defect Distribution</h3>
+                      <div class="relative w-full max-w-sm" style="height: 250px;">
+                          <canvas id="complianceChart"></canvas>
+                      </div>
+                  </div>
+               </div>
+               <div class="glass-card flex flex-col h-full w-full border-t-4 border-slate-600 mb-8 print-grid">
+                  <div class="p-5 border-b border-slate-100 bg-white rounded-t-xl flex justify-between items-center">
+                      <h3 class="font-extrabold text-slate-800 text-lg"><i class="fa-solid fa-box-open text-slate-500 mr-2"></i> CLOSED ISAs Log</h3>
+                      <span class="text-xs bg-slate-600 text-white px-3 py-1.5 rounded-md font-bold shadow" id="table-row-count-closed">0 Records</span>
+                  </div>
+                  <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 400px;">
+                      <table class="w-full text-left text-sm whitespace-nowrap">
+                          <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10 shadow-sm">
+                               <tr>
+                                   <th class="p-4 font-bold">ISA Number</th>
+                                   <th class="p-4 font-bold">Carrier</th>
+                                   <th class="p-4 font-bold">License Plate</th>
+                                   <th class="p-4 font-bold text-center">PRE_CHECK_IN (IST)</th>
+                                   <th class="p-4 font-bold text-center">IB_DOCK_COMPLETED (IST)</th>
+                                   <th class="p-4 font-bold">Status Remark</th>
+                               </tr>
+                          </thead>
+                          <tbody id="result-table-body-closed" class="divide-y divide-slate-100">
+                          </tbody>
+                      </table>
+                  </div>
+               </div>
+               <div class="glass-card flex flex-col h-full w-full border-t-4 border-blue-500 mb-8 print-grid">
+                  <div class="p-5 border-b border-slate-100 bg-white rounded-t-xl flex justify-between items-center">
+                      <h3 class="font-extrabold text-slate-800 text-lg"><i class="fa-solid fa-truck-ramp-box text-blue-500 mr-2"></i> ARRIVED ISAs Log</h3>
+                      <span class="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-md font-bold shadow" id="table-row-count-arrived">0 Records</span>
+                  </div>
+                  <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 400px;">
+                      <table class="w-full text-left text-sm whitespace-nowrap">
+                          <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10 shadow-sm">
+                               <tr>
+                                   <th class="p-4 font-bold">ISA Number</th>
+                                   <th class="p-4 font-bold">Carrier</th>
+                                   <th class="p-4 font-bold">License Plate</th>
+                                   <th class="p-4 font-bold text-center">PRE_CHECK_IN (IST)</th>
+                                   <th class="p-4 font-bold text-center">IB_DOCK_COMPLETED (IST)</th>
+                                   <th class="p-4 font-bold">Status Remark</th>
+                               </tr>
+                          </thead>
+                          <tbody id="result-table-body-arrived" class="divide-y divide-slate-100">
+                          </tbody>
+                      </table>
+                  </div>
+               </div>
+               <div class="glass-card flex flex-col h-full w-full border-t-4 border-amber-500 mb-8 print-grid">
+                  <div class="p-5 border-b border-slate-100 bg-white rounded-t-xl flex justify-between items-center">
+                      <h3 class="font-extrabold text-slate-800 text-lg"><i class="fa-solid fa-clock-rotate-left text-amber-500 mr-2"></i> SCHEDULED ISAs Log</h3>
+                      <span class="text-xs bg-amber-500 text-white px-3 py-1.5 rounded-md font-bold shadow" id="table-row-count-scheduled">0 Records</span>
+                  </div>
+                  <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 400px;">
+                      <table class="w-full text-left text-sm whitespace-nowrap">
+                          <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10 shadow-sm">
+                               <tr>
+                                   <th class="p-4 font-bold">ISA Number</th>
+                                   <th class="p-4 font-bold">Carrier</th>
+                                   <th class="p-4 font-bold">License Plate</th>
+                                   <th class="p-4 font-bold text-center">PRE_CHECK_IN (IST)</th>
+                                   <th class="p-4 font-bold text-center">IB_DOCK_COMPLETED (IST)</th>
+                                   <th class="p-4 font-bold">Status Remark</th>
+                               </tr>
+                          </thead>
+                          <tbody id="result-table-body-scheduled" class="divide-y divide-slate-100">
+                          </tbody>
+                      </table>
+                  </div>
+               </div>
+               <div class="text-center text-slate-400 text-xs mt-8 mb-4 font-medium print:block">
+                  Report Generated via Executive YMS Dashboard • <span id="footer-time"></span>
+               </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let globalResults = [];
+        let compChartInstance = null;
+        function updateLiveTime() {
+            const timeElement = document.getElementById('live-time');
+           setInterval(() => {
+                const now = new Date();
+                let timeStr = now.toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+               timeElement.innerText = timeStr;
+               if(document.getElementById('footer-time'))
+                    document.getElementById('footer-time').innerText = timeStr;
+            }, 1000);
+        }
+        function handleSingleFileUpload(event, textareaId, statusId) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let statusEl = document.getElementById(statusId);
+           statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Processing Data...';
+           statusEl.style.display = 'block';
+            let reader = new FileReader();
+           reader.onload = function(e) {
+                try {
+                   let data = new Uint8Array(e.target.result);
+                   let workbook = XLSX.read(data, {type: 'array', raw: true, cellDates: true});
+                   let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                   let jsonData = XLSX.utils.sheet_to_json(firstSheet, {raw: false, dateNF: "yyyy-mm-dd hh:mm:ss", defval: ''});
+                   if (jsonData.length === 0) throw new Error("Empty file");
+                   let headers = Object.keys(jsonData[0]);
+                   let tsv = headers.join('\t') + '\n';
+                   jsonData.forEach(row => {
+                       let rowVals = headers.map(h => {
+                           let val = row[h];
+                           if (typeof val === 'number') return val.toLocaleString('fullwide', {useGrouping: false});
+                           return val;
+                       });
+                       tsv += rowVals.join('\t') + '\n';
+                   });
+                   document.getElementById(textareaId).value = tsv;
+                   statusEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> File ingested successfully';
+                   statusEl.className = "text-xs font-bold mt-3 px-3 py-2 rounded-md bg-emerald-50 text-emerald-600 block";
+                } catch (err) {
+                   statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Data format error';
+                   statusEl.className = "text-xs font-bold mt-3 px-3 py-2 rounded-md bg-rose-50 text-rose-600 block";
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+       document.getElementById('ymsRoot').querySelector('#dm-file-upload').addEventListener('change', (e) => handleSingleFileUpload(e, 'dm-data', 'dm-status'));
+       document.getElementById('ymsRoot').querySelector('#yms-file-upload').addEventListener('change', (e) => handleSingleFileUpload(e, 'yms-data', 'yms-status'));
+        function parseTSV(text) {
+            let rows = text.trim().split('\n');
+            if (rows.length < 2) return { headers: [], data: [] };
+            let headers = rows[0].split('\t').map(h => h.trim().toLowerCase());
+            let data = [];
+            for(let i=1; i<rows.length; i++) {
+                let cols = rows[i].split('\t');
+                let obj = {};
+               headers.forEach((h, idx) => { obj[h] = cols[idx] ? cols[idx].trim() : ''; });
+               data.push(obj);
+            }
+            return { headers, data };
+        }
+        function formatISAString(val) {
+           let str = (val || '').trim();
+            if (str.match(/e/i)) {
+                let num = Number(str);
+                if (!isNaN(num)) return num.toLocaleString('fullwide', {useGrouping: false});
+            }
+            return str.replace(/\.0+$/, '');
+        }
+        function forceISTConversion(dateStr) {
+            if (!dateStr || dateStr === '-' || String(dateStr).trim() === '') return '-';
+            let str = String(dateStr).trim().replace('T', ' ');
+            let parts = str.match(/(\d+)/g);
+            if (!parts || parts.length < 3) return str;
+            let year, month, day;
+            if (parts[0].length === 4) { 
+                year = parseInt(parts[0]);
+                month = parseInt(parts[1]) - 1;
+                day = parseInt(parts[2]);
+            } else if (parts.length >= 3 && parts[2].length === 4) { 
+                day = parseInt(parts[0]);
+                month = parseInt(parts[1]) - 1;
+                year = parseInt(parts[2]);
+            } else {
+                return str;
+            }
+            let hours = parts.length > 3 ? parseInt(parts[3]) : 0;
+            let mins = parts.length > 4 ? parseInt(parts[4]) : 0;
+            let secs = parts.length > 5 ? parseInt(parts[5]) : 0;
+            let d = new Date(Date.UTC(year, month, day, hours, mins, secs));
+            d = new Date(d.getTime() + 19800000); // +5:30 IST
+            let oYear = d.getUTCFullYear();
+            let oMonth = String(d.getUTCMonth() + 1).padStart(2, '0');
+            let oDay = String(d.getUTCDate()).padStart(2, '0');
+            let oHours = String(d.getUTCHours()).padStart(2, '0');
+            let oMins = String(d.getUTCMinutes()).padStart(2, '0');
+            return `${oYear}-${oMonth}-${oDay} ${oHours}:${oMins}`;
+        }
+        function extractDataDate(dmData, dmHeaders) {
+            let apptDateCol = dmHeaders.find(h => h.includes('appointment date') || h.includes('date'));
+            if (apptDateCol && dmData.length > 0) {
+                for (let i = 0; i < dmData.length; i++) {
+                    if (dmData[i][apptDateCol]) {
+                       let rawDate = dmData[i][apptDateCol];
+                       let d = new Date(rawDate);
+                       if (!isNaN(d.getTime())) {
+                           return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                       }
+                       return rawDate;
+                    }
+                }
+            }
+            return "Current Period";
+        }
+        function processVerification() {
+            let dmText = document.getElementById('dm-data').value;
+            let ymsText = document.getElementById('yms-data').value;
+           if(!dmText.trim() || !ymsText.trim()) {
+                alert("Critical Error: Missing Data. Please upload both Dockmaster and YMS files.");
+                return;
+            }
+            let dm = parseTSV(dmText);
+            let yms = parseTSV(ymsText);
+           document.getElementById('data-date-display').innerText = extractDataDate(dm.data, dm.headers);
+            let dmStatusCol = dm.headers.find(h => h.includes('status'));
+            let dmApptCol = dm.headers.find(h => h.includes('appointment id') || h === 'isa');
+            let dmCarrierCol = dm.headers.find(h => h.includes('carrier'));
+            let ymsLpCol = yms.headers.find(h => h.includes('license plate'));
+            let ymsEventCol = yms.headers.find(h => h.includes('event type'));
+            let ymsIsaCol = yms.headers.find(h => h === 'isa');
+            let ymsTimeCol = yms.headers.find(h => h === 'date utc' || h === 'date' || h === 'event date' || h.includes('utc'));
+            if (!ymsTimeCol) {
+               ymsTimeCol = yms.headers.find(h => h.includes('date') && !h.includes('ist')) || yms.headers.find(h => h.includes('time'));
+            }
+           if(!dmStatusCol || !dmApptCol) {
+                alert("Schema mismatch: Required columns not found in Dockmaster data.");
+                return;
+            }
+            let lpEvents = {};
+            let isaEvents = {};
+            let isaToLp = {};
+           yms.data.forEach(r => {
+                let lp = r[ymsLpCol];
+                let event = r[ymsEventCol];
+                let rawIsa = r[ymsIsaCol];
+                let timeStr = ymsTimeCol ? r[ymsTimeCol] : '';
+               if(event) {
+                   let eventObj = { type: event.toUpperCase(), time: timeStr };
+                   if(lp) {
+                       if(!lpEvents[lp]) lpEvents[lp] = [];
+                       lpEvents[lp].push(eventObj);
+                    }
+                   if(rawIsa) {
+                       let ymsIsa = formatISAString(rawIsa);
+                       if(!isaEvents[ymsIsa]) isaEvents[ymsIsa] = [];
+                       isaEvents[ymsIsa].push(eventObj);
+                       if(lp) {
+                           if(!isaToLp[ymsIsa]) isaToLp[ymsIsa] = new Set();
+                           isaToLp[ymsIsa].add(lp);
+                        }
+                    }
+                }
+           });
+           globalResults = [];
+            let totalTracked = 0, defects = 0;
+            let compliantCount = 0, missingInOnly = 0, missingOutOnly = 0, missingBoth = 0;
+            let carrierStats = {};
+            let statusStats = {
+               'CLOSED': { total: 0, checkIn: 0, checkOut: 0 },
+               'ARRIVED': { total: 0, checkIn: 0, checkOut: 0 },
+               'ARRIVAL SCHEDULED': { total: 0, checkIn: 0, checkOut: 0 }
+            };
+            let closedCompliantCount = 0;
+            let validStatuses = ['CLOSED', 'ARRIVED', 'ARRIVAL SCHEDULED'];
+           dm.data.forEach(r => {
+                let status = r[dmStatusCol] ? r[dmStatusCol].toUpperCase().trim() : '';
+               if(status.includes('SCHEDULED')) status = 'ARRIVAL SCHEDULED';
+               if(validStatuses.includes(status)) {
+                    totalTracked++;
+                    statusStats[status].total++;
+                    let dmIsa = formatISAString(r[dmApptCol]);
+                    let carrier = dmCarrierCol ? (r[dmCarrierCol] || 'Unassigned') : 'Unassigned';
+                    let lps = isaToLp[dmIsa] ? Array.from(isaToLp[dmIsa]) : [];
+                    let allEventsForIsa = [];
+                    if(isaEvents[dmIsa]) allEventsForIsa.push(...isaEvents[dmIsa]);
+                    lps.forEach(lp => {
+                        if(lpEvents[lp]) allEventsForIsa.push(...lpEvents[lp]);
+                    });
+                    let hasIn = false, hasOut = false;
+                    let inTimeRaw = '-', outTimeRaw = '-';
+                    allEventsForIsa.forEach(evtObj => {
+                        if(evtObj.type === 'PRE_CHECK_IN' || evtObj.type === 'PRE-CHECK-IN') {
+                            hasIn = true;
+                            if(inTimeRaw === '-' || evtObj.time < inTimeRaw) inTimeRaw = evtObj.time;
+                        }
+                        if(evtObj.type === 'IB_DOCK_COMPLETED') {
+                            hasOut = true;
+                            if(outTimeRaw === '-' || evtObj.time > outTimeRaw) outTimeRaw = evtObj.time;
+                        }
+                    });
+                    let finalInTime = forceISTConversion(inTimeRaw);
+                    let finalOutTime = forceISTConversion(outTimeRaw);
+                    if(hasIn) statusStats[status].checkIn++;
+                    if(hasOut) statusStats[status].checkOut++;
+                    let isDefect = !hasIn || !hasOut;
+                    if(isDefect) defects++;
+                    if(hasIn && hasOut) {
+                        compliantCount++;
+                        if(status === 'CLOSED') closedCompliantCount++;
+                    }
+                   else if(!hasIn && hasOut) missingInOnly++;
+                   else if(hasIn && !hasOut) missingOutOnly++;
+                   else missingBoth++;
+                    let remark = "Compliant";
+                     if (!hasIn && !hasOut) remark = "Missing Both";
+                    else if (!hasIn) remark = "Missing PRE_CHECK_IN";
+                    else if (!hasOut) remark = "Missing IB_DOCK_COMPLETED";
+                    if(!carrierStats[carrier]) carrierStats[carrier] = { total: 0, defects: 0 };
+                    carrierStats[carrier].total += 1;
+                    if(isDefect) carrierStats[carrier].defects += 1;
+                    globalResults.push({
+                        isa: dmIsa,
+                        status: status, 
+                        carrier: carrier,
+                        lps: lps.length > 0 ? lps.join(', ') : 'N/A',
+                        hasIn: hasIn,
+                        hasOut: hasOut,
+                        inTime: finalInTime,
+                        outTime: finalOutTime,
+                        remark: remark,
+                        isDefect: isDefect
+                    });
+                }
+           });
+            let totalComplianceScore = statusStats['CLOSED'].total > 0 ? ((closedCompliantCount / statusStats['CLOSED'].total) * 100).toFixed(1) : 0;
+           document.getElementById('kpi-total').innerText = totalTracked;
+           document.getElementById('kpi-defects').innerText = defects;
+           document.getElementById('kpi-score').innerText = totalComplianceScore + '%';
+            let scoreEl = document.getElementById('kpi-score');
+            if (totalComplianceScore >= 98) scoreEl.className = "text-5xl font-black text-emerald-400 drop-shadow-md";
+            else if (totalComplianceScore >= 90) scoreEl.className = "text-5xl font-black text-yellow-400 drop-shadow-md";
+            else scoreEl.className = "text-5xl font-black text-rose-400 drop-shadow-md";
+            for (let s of ['CLOSED', 'ARRIVED', 'ARRIVAL SCHEDULED']) {
+                let prefix = s === 'CLOSED' ? 'closed' : (s === 'ARRIVED' ? 'arrived' : 'sched');
+                let data = statusStats[s];
+                let inPerc = data.total > 0 ? ((data.checkIn / data.total) * 100).toFixed(0) : 0;
+                let outPerc = data.total > 0 ? ((data.checkOut / data.total) * 100).toFixed(0) : 0;
+               document.getElementById(`kpi-${prefix}-total`).innerText = data.total;
+               document.getElementById(`kpi-${prefix}-in`).innerText = data.checkIn;
+               document.getElementById(`kpi-${prefix}-in-perc`).innerText = `(${inPerc}%)`;
+                document.getElementById(`bar-${prefix}-in`).style.width = `${inPerc}%`;
+               document.getElementById(`kpi-${prefix}-out`).innerText = data.checkOut;
+               document.getElementById(`kpi-${prefix}-out-perc`).innerText = `(${outPerc}%)`;
+               document.getElementById(`bar-${prefix}-out`).style.width = `${outPerc}%`;
+            }
+            let sortedCarriers = Object.keys(carrierStats).sort((a, b) => carrierStats[b].defects - carrierStats[a].defects);
+            let worstCarrier = sortedCarriers[0];
+            let summaryText = `Today's inbound operations processed a total of <b>${totalTracked} tracked ISAs</b>. Closed YMS compliance stands at <b>${totalComplianceScore}%</b>. `;
+            if (defects === 0) {
+               summaryText += `Operations are running flawlessly with <b>0 defects</b> recorded. Excellent event capture rate.`;
+            } else {
+               summaryText += `There are currently <b>${defects} ISAs missing required YMS events</b>. `;
+               if(missingInOnly > 0) summaryText += `${missingInOnly} missed PRE_CHECK_IN. `;
+               if(missingOutOnly > 0) summaryText += `${missingOutOnly} missed IB_DOCK_COMPLETED. `;
+                if (worstCarrier && carrierStats[worstCarrier].defects > 0) {
+                   summaryText += `Carrier <b>${worstCarrier}</b> accounts for the most defects. Please cross-verify to ensure data accuracy.`;
+                }
+            }
+           document.getElementById('executive-summary-text').innerHTML = summaryText;
+            renderCharts(compliantCount, missingInOnly, missingOutOnly, missingBoth);
+            let tbodyClosed = document.getElementById('result-table-body-closed');
+            let tbodyArrived = document.getElementById('result-table-body-arrived');
+            let tbodySched = document.getElementById('result-table-body-scheduled');
+           tbodyClosed.innerHTML = '';
+           tbodyArrived.innerHTML = '';
+           tbodySched.innerHTML = '';
+            let cCount = 0, aCount = 0, sCount = 0;
+           globalResults.sort((a, b) => (b.isDefect === true) - (a.isDefect === true));
+           globalResults.forEach(res => {
+                let trClass = res.isDefect ? 'defect-row' : 'success-row';
+                let remarkStyling = res.isDefect ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-medium';
+                let iconIn = res.hasIn ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg mb-1"></i>' : '<i class="fa-solid fa-circle-xmark text-rose-500 text-lg mb-1"></i>';
+                let iconOut = res.hasOut ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg mb-1"></i>' : '<i class="fa-solid fa-circle-xmark text-rose-500 text-lg mb-1"></i>';
+                let timeInStr = res.hasIn ? res.inTime : 'N/A';
+                let timeOutStr = res.hasOut ? res.outTime : 'N/A';
+                let rowHTML = `
+                   <tr class="${trClass} border-b border-slate-200 transition">
+                      <td class="p-4 font-extrabold text-slate-800">${res.isa}</td>
+                      <td class="p-4 text-slate-600 font-medium">${res.carrier}</td>
+                      <td class="p-4"><code class="bg-white px-2 py-1 rounded border border-slate-300 shadow-sm text-slate-700 font-bold">${res.lps}</code></td>
+                      <td class="p-4 text-center leading-tight">
+                          ${iconIn}<br>
+                          <span class="text-[11px] text-slate-600 font-bold tracking-widest bg-white px-2 py-1 rounded shadow-sm border border-slate-200 inline-block mt-1">${timeInStr}</span>
+                      </td>
+                      <td class="p-4 text-center leading-tight">
+                          ${iconOut}<br>
+                          <span class="text-[11px] text-slate-600 font-bold tracking-widest bg-white px-2 py-1 rounded shadow-sm border border-slate-200 inline-block mt-1">${timeOutStr}</span>
+                      </td>
+                      <td class="p-4 ${remarkStyling}">${res.remark}</td>
+                   </tr>
+                `;
+                if (res.status === 'CLOSED') { tbodyClosed.innerHTML += rowHTML; cCount++; }
+                else if (res.status === 'ARRIVED') { tbodyArrived.innerHTML += rowHTML; aCount++; }
+                else { tbodySched.innerHTML += rowHTML; sCount++; }
+           });
+           document.getElementById('table-row-count-closed').innerText = `${cCount} Records`;
+           document.getElementById('table-row-count-arrived').innerText = `${aCount} Records`;
+           document.getElementById('table-row-count-scheduled').innerText = `${sCount} Records`;
+           document.getElementById('results-section').style.display = 'block';
+           document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+           // Auto Sync to Master Summary
+           updateMasterSummaryData();
+        }
+        function renderCharts(compliant, missingIn, missingOut, missingBoth) {
+            let ctxComp = document.getElementById('complianceChart').getContext('2d');
+            if (compChartInstance) compChartInstance.destroy();
+           compChartInstance = new Chart(ctxComp, {
+                type: 'doughnut',
+                data: {
+                   labels: [
+                        `Fully Compliant (${compliant})`, 
+                        `Missing PRE_CHECK_IN (${missingIn})`, 
+                        `Missing IB_DOCK_COMPLETED (${missingOut})`, 
+                        `Ghost (No Data) (${missingBoth})`
+                    ],
+                   datasets: [{
+                        data: [compliant, missingIn, missingOut, missingBoth],
+                        backgroundColor: ['#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 6
+                   }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 12, family: 'Plus Jakarta Sans', weight: 'bold' }, padding: 20 } }
+                    }
+                }
+            });
+        }
+        function downloadCSV() {
+           if(globalResults.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+            let csvContent = "Appointment / ISA,DM Status,Carrier,License Plate,PRE_CHECK_IN Found,PRE_CHECK_IN Time (IST),IB_DOCK_COMPLETED Found,IB_DOCK_COMPLETED Time (IST),Remarks\n";
+           globalResults.forEach(res => {
+                let isa = res.isa;
+                let status = `"${res.status}"`;
+                let carrier = `"${res.carrier}"`;
+                let lps = `"${res.lps}"`;
+                let checkIn = res.hasIn ? "Yes" : "No";
+                let checkOut = res.hasOut ? "Yes" : "No";
+                let remark = `"${res.remark}"`;
+                let tIn = res.hasIn ? `"${res.inTime}"` : 'N/A';
+                let tOut = res.hasOut ? `"${res.outTime}"` : 'N/A';
+               csvContent += `${isa},${status},${carrier},${lps},${checkIn},${tIn},${checkOut},${tOut},${remark}\n`;
+           });
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            let dateStr = document.getElementById('data-date-display').innerText.replace(/[^0-9-]/g, '');
+            let filename = `Executive_YMS_Report_${dateStr || 'Export'}.csv`;
+           link.setAttribute("href", url);
+           link.setAttribute("download", filename);
+           link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+           link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</div>
+ 
+<!-- ================= 4. OSSLA & ISS WEBSITE ================= -->
+<div id="osslaRoot" class="master-section">
+<style>
+    :root {
+        --ossla-bg: #0b0f19;
+        --ossla-card: #131b2e;
+        --ossla-text: #f8fafc;
+        --ossla-muted: #94a3b8;
+       --ossla-accent: #3b82f6;
+       --ossla-border: #1e293b;
+        --ossla-success: #22c55e;
+        --ossla-danger: #ef4444;
+        --ossla-warning: #f59e0b;
+    }
+    #osslaRoot { background-color: var(--ossla-bg); color: var(--ossla-text); min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; }
+    #osslaRoot header { background-color: var(--ossla-card); border-bottom: 1px solid var(--ossla-border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    #osslaRoot .logo-area h1 { font-size: 1.3rem; color: var(--ossla-accent); }
+    #osslaRoot .current-time-display { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--ossla-accent); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; }
+    #osslaRoot .btn-group { display: flex; gap: 0.8rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap; }
+    #osslaRoot .action-btn { background-color: var(--ossla-success); color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background-color 0.2s; }
+    #osslaRoot .action-btn:hover:not(:disabled) { background-color: #16a34a; }
+    #osslaRoot .action-btn.export { background-color: var(--ossla-accent); }
+    #osslaRoot .action-btn.export:hover:not(:disabled) { background-color: #2563eb; }
+    #osslaRoot .action-btn:disabled { background-color: var(--ossla-border); cursor: not-allowed; opacity: 0.6; }
+    #osslaRoot main { padding: 2rem; flex: 1; max-width: 1700px; margin: 0 auto; width: 100%; }
+    #osslaRoot .upload-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    #osslaRoot .card { background-color: var(--ossla-card); border: 1px solid var(--ossla-border); border-radius: 12px; padding: 1.5rem; }
+    #osslaRoot .card h3 { margin-bottom: 1rem; font-size: 1rem; color: var(--ossla-accent); }
+    #osslaRoot .file-dropzone { border: 2px dashed var(--ossla-border); padding: 1.2rem; text-align: center; border-radius: 8px; cursor: pointer; background: rgba(15, 23, 42, 0.3); margin-bottom: 0.8rem; position: relative; }
+    #osslaRoot .file-dropzone input { display: none; }
+    #osslaRoot .file-info-box { display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; background: rgba(15, 23, 42, 0.8); padding: 0.4rem 0.8rem; border-radius: 6px; border: 1px solid var(--ossla-success); }
+    #osslaRoot .file-info { font-size: 0.8rem; color: var(--ossla-success); font-weight: 600; }
+    #osslaRoot .cancel-file-btn { background: rgba(239, 68, 68, 0.2); border: 1px solid var(--ossla-danger); color: var(--ossla-danger); font-size: 0.8rem; font-weight: bold; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 4px; }
+    #osslaRoot .cancel-file-btn:hover { background: var(--ossla-danger); color: white; }
+    #osslaRoot .input-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
+    #osslaRoot .input-group label { font-size: 0.8rem; color: var(--ossla-muted); }
+    #osslaRoot .input-group input { background: var(--ossla-bg); border: 1px solid var(--ossla-border); padding: 0.5rem 0.8rem; border-radius: 6px; color: var(--ossla-text); font-size: 0.9rem; color-scheme: dark; }
+    #osslaRoot .container-checkbox-container { max-height: 120px; overflow-y: auto; background: var(--ossla-bg); border: 1px solid var(--ossla-border); padding: 0.5rem; border-radius: 6px; display: flex; flex-direction: column; gap: 0.3rem; }
+    #osslaRoot .container-checkbox-container label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--ossla-text); cursor: pointer; font-weight: 500; }
+    #osslaRoot .container-checkbox-container input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--ossla-accent); cursor: pointer; }
+    #osslaRoot .manual-iss-box { background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--ossla-accent); padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+    #osslaRoot .manual-iss-row { display: grid; grid-template-columns: 1fr 1fr 1.5fr auto; gap: 0.5rem; align-items: flex-end; }
+    @media(max-width: 768px) { #osslaRoot .manual-iss-row { grid-template-columns: 1fr; } }
+    #osslaRoot .manual-list { margin-top: 0.8rem; max-height: 100px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.3rem; }
+    #osslaRoot .manual-item { display: flex; justify-content: space-between; align-items: center; background: var(--ossla-bg); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; border: 1px solid var(--ossla-border); }
+    #osslaRoot .banner-split-grid { display: grid; grid-template-columns: 1.2fr 0.8fr 1.2fr; gap: 1rem; margin-bottom: 1.5rem; }
+    @media(max-width: 1100px) { #osslaRoot .banner-split-grid { grid-template-columns: 1fr; } }
+    #osslaRoot .report-date-banner { background-color: var(--ossla-card); border: 1px solid var(--ossla-accent); border-radius: 10px; padding: 0.9rem 1.5rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
+    #osslaRoot .report-date-banner.bold-title { border-color: var(--ossla-warning); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1); justify-content: center; text-align: center; }
+    #osslaRoot .report-date-banner span { font-size: 0.75rem; color: var(--ossla-muted); text-transform: uppercase; font-weight: 700; }
+    #osslaRoot .report-date-banner h3.large-date-text { font-size: 1.35rem; color: var(--ossla-accent); font-weight: 900; margin-top: 0.2rem; letter-spacing: 0.5px; }
+    #osslaRoot .report-date-banner h3.bold-oosla { color: var(--ossla-warning); font-weight: 900; font-size: 1.45rem; letter-spacing: 1.5px; text-transform: uppercase; }
+    #osslaRoot .fc-input-banner { background-color: var(--ossla-card); border: 1px solid var(--ossla-success); border-radius: 10px; padding: 0.9rem 1.5rem; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1); }
+    #osslaRoot .fc-input-banner label { font-size: 0.75rem; color: var(--ossla-muted); text-transform: uppercase; font-weight: 700; }
+    #osslaRoot .fc-input-banner input { background: var(--ossla-bg); border: 1px solid var(--ossla-border); color: var(--ossla-success); font-size: 1.2rem; font-weight: 800; padding: 0.3rem 0.6rem; border-radius: 6px; margin-top: 0.2rem; outline: none; text-transform: uppercase; text-align: center; }
+    #osslaRoot .top-metrics-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media(max-width: 1400px) { #osslaRoot .top-metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+    #osslaRoot .metric-box { background-color: var(--ossla-card); border: 1px solid var(--ossla-border); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 1rem; }
+    #osslaRoot .metric-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: rgba(59, 130, 246, 0.1); color: var(--ossla-accent); border: 1px solid rgba(59, 130, 246, 0.2); }
+    #osslaRoot .metric-content span { font-size: 0.65rem; color: var(--ossla-muted); text-transform: uppercase; font-weight: 600; }
+    #osslaRoot .metric-content h2 { font-size: 1.3rem; font-weight: 700; margin-top: 0.2rem; }
+    #osslaRoot .performance-grid { display: grid; grid-template-columns: 1.2fr 0.8fr 1.2fr; gap: 1.5rem; margin-bottom: 2rem; }
+    @media(max-width: 1100px) { #osslaRoot .performance-grid { grid-template-columns: 1fr; } }
+    #osslaRoot .perf-panel { background-color: var(--ossla-card); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+    #osslaRoot .perf-panel.miss { border: 1px solid rgba(239, 68, 68, 0.4); }
+    #osslaRoot .perf-panel.side { border: 1px solid rgba(245, 158, 11, 0.4); }
+    #osslaRoot .perf-panel.overall { border: 1px solid var(--ossla-border); align-items: center; justify-content: center; padding: 1.5rem; text-align: center; }
+    #osslaRoot .perf-header { padding: 0.9rem; text-align: center; font-size: 1rem; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; }
+    #osslaRoot .perf-panel.miss .perf-header { background: rgba(239, 68, 68, 0.18); color: var(--ossla-danger); }
+    #osslaRoot .perf-panel.side .perf-header { background: rgba(245, 158, 11, 0.15); color: var(--ossla-warning); }
+    #osslaRoot .perf-body { display: grid; grid-template-columns: repeat(4, 1fr); padding: 1.8rem 1rem; text-align: center; border-bottom: 1px solid var(--ossla-border); }
+    #osslaRoot .perf-item span { font-size: 0.85rem; color: var(--ossla-text); text-transform: uppercase; font-weight: 900; display: block; }
+    #osslaRoot .perf-item h4 { font-size: 1.8rem; font-weight: 900; margin-top: 0.4rem; }
+    #osslaRoot .perf-footer { padding: 1.2rem; text-align: center; }
+    #osslaRoot .perf-footer span { font-size: 0.9rem; color: var(--ossla-muted); text-transform: uppercase; font-weight: 800; }
+    #osslaRoot .perf-footer h2 { font-size: 2.8rem; font-weight: 900; margin-top: 0.3rem; }
+    #osslaRoot .ring-container { position: relative; width: 130px; height: 130px; margin: 0.5rem auto; display: flex; align-items: center; justify-content: center; }
+    #osslaRoot .ring-text { position: absolute; font-size: 1.4rem; font-weight: 900; color: #a855f7; }
+    #osslaRoot .table-container { background-color: var(--ossla-card); border: 1px solid var(--ossla-border); border-radius: 12px; overflow-x: auto; margin-bottom: 2rem; }
+    #osslaRoot .table-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--ossla-border); display: flex; justify-content: space-between; align-items: center; }
+    #osslaRoot .details-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    #osslaRoot .details-table th, #osslaRoot .details-table td { padding: 0.8rem 1rem; border-bottom: 1px solid var(--ossla-border); white-space: nowrap; }
+    #osslaRoot .details-table th { background-color: rgba(15, 23, 42, 0.8); font-weight: 600; color: var(--ossla-muted); text-transform: uppercase; font-size: 0.7rem; cursor: pointer; user-select: none; }
+    #osslaRoot .details-table th:hover { color: var(--ossla-text); background-color: rgba(30, 41, 59, 0.9); }
+    #osslaRoot footer { text-align: center; padding: 1.2rem; color: var(--ossla-muted); font-size: 0.8rem; border-top: 1px solid var(--ossla-border); background-color: var(--ossla-card); }
+</style>
+<header>
+    <div class="logo-area">
+        <h1>OSSLA & ISS Executive Command Center</h1>
+    </div>
+    <div class="controls-area">
+        <div id="ossla_liveClock" class="current-time-display">Loading time...</div>
+    </div>
+</header>
+<main>
+    <div class="upload-section">
+        <div class="card">
+            <h3>1. Upload Query Data (ZIP / Text File)</h3>
+            <div class="file-dropzone" id="ossla_queryDropzone" onclick="document.getElementById('ossla_queryFile').click()">
+                <div id="ossla_queryPromptText">
+                    <p>📂 Upload Query File (.zip / .txt / .csv)</p>
+                </div>
+                <input type="file" id="ossla_queryFile" accept=".zip,.txt,.csv" onchange="ossla_handleFile(event, 'query')">
+                <div id="ossla_queryFileDisplay"></div>
+            </div>
+            <div class="input-group">
+                <label>From Date (`received_on_day`):</label>
+                <input type="date" id="ossla_fromDate" onchange="updateMasterSummaryData()">
+            </div>
+            <div class="input-group">
+                <label>To Date (`received_on_day`):</label>
+                <input type="date" id="ossla_toDate" onchange="updateMasterSummaryData()">
+            </div>
+            <div class="input-group" style="margin-top: 0.8rem;">
+                <label>Select Container Types (Auto-extracted):</label>
+                <div id="ossla_containerCheckboxGroup" class="container-checkbox-container">
+                    <span style="font-size: 0.75rem; color: var(--ossla-muted); padding: 0.2rem;">Upload query file first to load container types</span>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h3>2. Upload ISS Data (XLOOKUP ASIN Source with TT & Title)</h3>
+            <div class="file-dropzone" id="ossla_issDropzone" onclick="document.getElementById('ossla_issFile').click()">
+                <div id="ossla_issPromptText">
+                    <p>📂 Upload ISS File (.zip / .txt / .csv)</p>
+                </div>
+                <input type="file" id="ossla_issFile" accept=".zip,.txt,.csv" onchange="ossla_handleFile(event, 'iss')">
+                <div id="ossla_issFileDisplay"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--ossla-warning); margin-top: 0.5rem; line-height: 1.4;">
+                  ℹ️ <strong>Rule:</strong> ISS TT download krte waqt sirf yeh points select karein, warna data capture nahi hoga:<br>
+                <code style="color: #fca5a5; font-size: 0.7rem;">1) IssueId | 2) IssueUrl | 3) ShortId | 4) Title | 5) Age | 6) Asin | 7) Quantity | 8) UPC</code>
+            </div>
+            <div class="manual-iss-box">
+                <label style="font-size: 0.8rem; font-weight: bold; color: var(--ossla-accent); margin-bottom: 0.4rem; display: block;">➕ Manual ISS Entry (Agar file me data na ho):</label>
+                <div class="manual-iss-row">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>ASIN:</label>
+                        <input type="text" id="ossla_manAsin" placeholder="e.g. B00EXMPL">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>TT No (ShortId):</label>
+                        <input type="text" id="ossla_manTtNo" placeholder="e.g. D511475761">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>Title (Description):</label>
+                        <input type="text" id="ossla_manTitle" placeholder="e.g. po in cancel">
+                    </div>
+                    <button type="button" class="action-btn" style="padding: 0.5rem 0.9rem; font-size: 0.8rem;" onclick="ossla_addManualIssEntry()">Add</button>
+                </div>
+                <div id="ossla_manualIssList" class="manual-list">
+                    <span style="font-size: 0.7rem; color: var(--ossla-muted);">No manual entries added yet.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="btn-group">
+        <button id="ossla_submitBtn" class="action-btn" onclick="ossla_runAutoCalculation()">🚀 Run & Execute Dashboard Analysis</button>
+        <button id="ossla_exportBtn" class="action-btn export" onclick="ossla_exportDetailedCSV('executive_report.csv')" disabled>📥 Export Raw Data CSV</button>
+    </div>
+    <div class="banner-split-grid">
+        <div class="report-date-banner">
+            <div>
+                <span>Report Date Range (`received_on_day`):</span>
+                <h3 id="ossla_displayDateRange" class="large-date-text">Select date filters above & run</h3>
+            </div>
+            <div style="font-size: 1.2rem;">📅</div>
+        </div>
+        <div class="fc-input-banner">
+            <label>FC CODE:</label>
+            <input type="text" id="ossla_fcCodeInput" placeholder="e.g. HBA4" maxlength="10">
+        </div>
+        <div class="report-date-banner bold-title">
+            <div>
+                <h3 class="bold-oosla">OOSLA REPORT</h3>
+            </div>
+        </div>
+    </div>
+    <div class="top-metrics-grid">
+        <div class="metric-box">
+            <div class="metric-icon">📦</div>
+            <div class="metric-content">
+                <span>Total Qty</span>
+                <h2 id="ossla_cardReceived">0</h2>
+            </div>
+        </div>
+        <div class="metric-box">
+            <div class="metric-icon">📦</div>
+            <div class="metric-content">
+                <span>Total Miss</span>
+                <h2 id="ossla_cardMiss">0</h2>
+            </div>
+        </div>
+        <div class="metric-box">
+            <div class="metric-icon">⏱️</div>
+            <div class="metric-content">
+                <span>Total Miss %</span>
+                <h2 id="ossla_cardMissPerc">0.00%</h2>
+            </div>
+        </div>
+        <div class="metric-box">
+            <div class="metric-icon">📦</div>
+            <div class="metric-content">
+                <span>Total Sideline</span>
+                <h2 id="ossla_cardSideline">0</h2>
+            </div>
+        </div>
+        <div class="metric-box">
+            <div class="metric-icon">⏱️</div>
+            <div class="metric-content">
+                <span>Sideline %</span>
+                <h2 id="ossla_cardSidePerc">0.00%</h2>
+            </div>
+        </div>
+        <div class="metric-box">
+            <div class="metric-icon purple">📊</div>
+            <div class="metric-content">
+                <span>Overall (Miss+Side) %</span>
+                <h2 id="ossla_cardCombinedPerc" style="color: #a855f7;">0.00%</h2>
+            </div>
+        </div>
+    </div>
+    <div class="performance-grid">
+        <div class="perf-panel miss">
+            <div class="perf-header">Miss Performance</div>
+            <div class="perf-body">
+                <div class="perf-item">
+                    <span>2 > 5 Days Miss</span>
+                    <h4 id="ossla_panelMiss2_5">0</h4>
+                </div>
+                <div class="perf-item">
+                    <span>2 > 5 days %</span>
+                    <h4 id="ossla_panelPerc2_5">0.00%</h4>
+                </div>
+                <div class="perf-item">
+                    <span>5 > days Miss</span>
+                    <h4 id="ossla_panelMiss5_up">0</h4>
+                </div>
+                <div class="perf-item">
+                    <span>5 > days %</span>
+                    <h4 id="ossla_panelPerc5_up">0.00%</h4>
+                </div>
+            </div>
+            <div class="perf-footer">
+                <span>Total Miss</span>
+                <h2 id="ossla_panelTotalMiss">0</h2>
+            </div>
+        </div>
+        <div class="perf-panel overall">
+            <div class="ring-container">
+                <canvas id="ossla_overallRingChart"></canvas>
+                <div class="ring-text" id="ossla_ringText">0.00%</div>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--ossla-muted); text-transform: uppercase; font-weight: 800; margin-top: 0.5rem;">Overall (Miss + Sideline) %</span>
+        </div>
+        <div class="perf-panel side">
+            <div class="perf-header">Sideline Performance</div>
+            <div class="perf-body">
+                <div class="perf-item">
+                    <span>2 > 5 Days Miss</span>
+                    <h4 id="ossla_panelSide2_5">0</h4>
+                </div>
+                <div class="perf-item">
+                    <span>2 > 5 days %</span>
+                    <h4 id="ossla_panelSidePerc2_5">0.00%</h4>
+                </div>
+                <div class="perf-item">
+                    <span>5 > days Miss</span>
+                    <h4 id="ossla_panelSide5_up">0</h4>
+                </div>
+                <div class="perf-item">
+                    <span>5 > days %</span>
+                    <h4 id="ossla_panelSidePerc5_up">0.00%</h4>
+                </div>
+            </div>
+            <div class="perf-footer">
+                <span>Total Sideline</span>
+                <h2 id="ossla_panelTotalSide">0</h2>
+            </div>
+        </div>
+    </div>
+    <div class="table-container">
+        <div class="table-header">
+            <h2 style="font-size: 1rem; color: var(--ossla-danger);">OSSLA Miss (Yes) Combined ASINs Summary</h2>
+            <button class="action-btn export" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="ossla_exportMissCSV('ossla_miss_report.csv')">📥 Export OSSLA Miss CSV</button>
+        </div>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="details-table" id="ossla_missTable">
+                <thead>
+                    <tr>
+                        <th onclick="ossla_sortTable('miss', 'asin')">ASIN (COMBINED) ↕</th>
+                        <th onclick="ossla_sortTable('miss', 'fc')">FC ↕</th>
+                        <th onclick="ossla_sortTable('miss', 'container')">Container Type ↕</th>
+                        <th onclick="ossla_sortTable('miss', 'date')">DATE ↕</th>
+                        <th onclick="ossla_sortTable('miss', 'qty')">Total Received Qty ↕</th>
+                        <th onclick="ossla_sortTable('miss', 'dwell')">Avg Dwell (Hours) ↕</th>
+                        <th onclick="ossla_sortTable('miss', 'status')">Status ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="ossla_missTableBody">
+                    <tr><td colspan="7" style="text-align: center; color: var(--ossla-muted);">No OSSLA Miss items loaded yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="table-container">
+        <div class="table-header">
+            <h2 style="font-size: 1rem; color: var(--ossla-warning);">Sideline Status Combined ASINs Summary</h2>
+            <button class="action-btn export" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="ossla_exportSidelineCSV('sideline_status_report.csv')">📥 Export Sideline CSV</button>
+        </div>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="details-table" id="ossla_sidelineTable">
+                <thead>
+                    <tr>
+                        <th onclick="ossla_sortTable('side', 'asin')">ASIN (COMBINED) ↕</th>
+                        <th onclick="ossla_sortTable('side', 'fc')">FC ↕</th>
+                        <th onclick="ossla_sortTable('side', 'container')">Container Type ↕</th>
+                        <th onclick="ossla_sortTable('side', 'date')">DATE ↕</th>
+                        <th onclick="ossla_sortTable('side', 'qty')">Total Received Qty ↕</th>
+                        <th onclick="ossla_sortTable('side', 'dwell')">Avg Dwell (Hours) ↕</th>
+                        <th onclick="ossla_sortTable('side', 'tt')">ISS TT No ↕</th>
+                        <th onclick="ossla_sortTable('side', 'title')">ISS Title (Description) ↕</th>
+                        <th onclick="ossla_sortTable('side', 'status')">Status ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="ossla_sidelineTableBody">
+                    <tr><td colspan="9" style="text-align: center; color: var(--ossla-muted);">No Sideline items loaded yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="table-container">
+        <div class="table-header">
+            <h2 style="font-size: 1rem;">Detailed Processed Rows</h2>
+            <span id="ossla_rowCountBadge" style="font-size: 0.8rem; color: var(--ossla-muted);">0 Rows Displayed</span>
+        </div>
+        <div style="max-height: 450px; overflow-y: auto;">
+            <table class="details-table" id="ossla_detailsTable">
+                <thead>
+                    <tr>
+                        <th>received_scannable_id</th>
+                        <th>warehouse_id</th>
+                        <th>FC</th>
+                        <th>inbound_ship_appointment_id</th>
+                        <th>asin</th>
+                        <th>received_qty</th>
+                        <th>received_container_type</th>
+                        <th>dwell (Hours)</th>
+                        <th>received_on_day</th>
+                        <th>ossla_miss</th>
+                        <th>ISS TT No</th>
+                        <th>ISS Title (Description)</th>
+                        <th>XLOOKUP Match</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="ossla_detailsTableBody">
+                    <tr><td colspan="14" style="text-align: center; color: var(--ossla-muted);">Please upload files and click Run & Execute Dashboard Analysis.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+<footer>
+    &copy; 2026 OSSLA & ISS Mastermind System. All rights reserved.
+</footer>
+</div>
+
+<!-- ================= 5. MASTER SUMMARY OVERVIEW (TAT -> YMS -> OSSLA STACKED EXACT MATCH) ================= -->
+<div id="masterSummaryRoot" class="master-section">
+<style>
+    #masterSummaryRoot { background-color: #0b0f19; color: #ffffff; min-height: 100vh; padding: 25px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    #masterSummaryRoot .card-bg { background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    #masterSummaryRoot .sub-header { font-size: 22px; font-weight: 800; color: #38bdf8; margin-bottom: 16px; border-bottom: 2px solid #1e293b; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+</style>
+<div style="max-width: 1400px; margin: 0 auto;">
+    
+    <!-- Master Header Bar with Manual Date Range Selector -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 card-bg" style="margin-bottom: 24px;">
+        <div class="flex items-center gap-4 flex-wrap">
+            <div id="ms-fc-badge" class="bg-indigo-600/20 border border-indigo-500 text-indigo-400 px-4 py-2 rounded-lg font-bold">
+                FC CODE: HBA4
+            </div>
+            <div class="bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-sm flex items-center gap-2 border border-slate-700">
+                <span class="text-xs font-bold text-slate-400">📅 From:</span>
+                <input type="date" id="ms-manual-from" onchange="syncManualDates('from')" style="background: #0b0f19; border: 1px solid #475569; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 13px; outline: none; cursor: pointer;">
+                <span class="text-xs font-bold text-slate-400 ml-2">To:</span>
+                <input type="date" id="ms-manual-to" onchange="syncManualDates('to')" style="background: #0b0f19; border: 1px solid #475569; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 13px; outline: none; cursor: pointer;">
+            </div>
+        </div>
+        <h1 class="text-2xl font-black tracking-wider text-indigo-400 uppercase">Master Summary Overview</h1>
+        <div>
+            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition cursor-pointer">
+                Download Report CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- 1. TAT REPORT SUMMARY SECTION -->
+    <div class="card-bg">
+        <div class="sub-header"><i class="fa-solid fa-clock"></i> 1. TAT Report Summary</div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-emerald-400 uppercase">Ontime 95th Percentile</p>
+                <h2 id="ms-tat-on95" class="text-2xl font-extrabold text-emerald-400 mt-1">—</h2>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-red-400 uppercase">Late 95th Percentile</p>
+                <h2 id="ms-tat-late95" class="text-2xl font-extrabold text-red-400 mt-1">—</h2>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-amber-400 uppercase">Sideline 95th Percentile</p>
+                <h2 id="ms-tat-side95" class="text-2xl font-extrabold text-amber-400 mt-1">—</h2>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-blue-400 uppercase">Overall 95th Percentile</p>
+                <h2 id="ms-tat-overall95" class="text-2xl font-extrabold text-white mt-1">—</h2>
+            </div>
+        </div>
+        <div class="flex justify-between items-center text-sm text-slate-400 bg-[#0b0f19] p-3 rounded-lg border border-slate-800">
+            <span>Total ISAs Processed in TAT: <strong id="ms-tat-count" class="text-white">0</strong></span>
+            <span id="ms-tat-ontime-badge" class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded">On-Time: 0</span>
+        </div>
+    </div>
+
+    <!-- 2. YMS COMPLIANCE SUMMARY SECTION -->
+    <div class="card-bg">
+        <div class="sub-header"><i class="fa-solid fa-truck-fast"></i> 2. YMS Compliance Summary</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-slate-400 uppercase">Compliance Score (Closed)</p>
+                <h2 id="ms-yms-score" class="text-3xl font-black text-emerald-400 mt-1">0%</h2>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-slate-400 uppercase">Total Tracked ISAs</p>
+                <h2 id="ms-yms-total" class="text-3xl font-black text-white mt-1">0</h2>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800 border-l-4 border-l-rose-500">
+                <p class="text-xs font-bold text-rose-400 uppercase">Total Defects</p>
+                <h2 id="ms-yms-defects" class="text-3xl font-black text-rose-500 mt-1">0</h2>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0b0f19] p-3 rounded-lg border border-slate-800 text-sm">
+            <div>Closed Total: <strong id="ms-yms-closed-total" class="text-white">0</strong></div>
+            <div>Pre-Check-In Closed: <strong id="ms-yms-checkin" class="text-blue-400">0</strong></div>
+            <div>Dock Completed: <strong id="ms-yms-dock" class="text-indigo-400">0</strong></div>
+        </div>
+    </div>
+
+    <!-- 3. OSSLA & ISS SUMMARY SECTION -->
+    <div class="card-bg">
+        <div class="sub-header"><i class="fa-solid fa-boxes-stacked"></i> 3. OSSLA & ISS Summary</div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-blue-400 uppercase">Total Qty Received</p>
+                <h2 id="ms-ossla-qty" class="text-2xl font-extrabold text-white mt-1">0</h2>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center">
+                    <p class="text-xs font-bold text-red-400 uppercase">TOTAL MISS (2&gt;5 / 5&gt;)</p>
+                    <span id="ms-ossla-miss-perc" class="text-xs font-bold bg-red-500/20 text-red-400 px-2 py-0.5 rounded">0.00%</span>
+                </div>
+                <h2 id="ms-ossla-miss" class="text-2xl font-extrabold text-red-400 mt-1">0</h2>
+                <div class="text-sm font-bold text-slate-300 mt-2 pt-2 border-t border-slate-800">
+                    2&gt;5: <span id="ms-ossla-m2_5" class="text-red-400 font-extrabold text-base">0</span> &nbsp;|&nbsp; 5&gt;: <span id="ms-ossla-m5_up" class="text-red-400 font-extrabold text-base">0</span>
+                </div>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <div class="flex justify-between items-center">
+                    <p class="text-xs font-bold text-amber-400 uppercase">TOTAL SIDELINE (2&gt;5 / 5&gt;)</p>
+                    <span id="ms-ossla-side-perc" class="text-xs font-bold bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">0.00%</span>
+                </div>
+                <h2 id="ms-ossla-side" class="text-2xl font-extrabold text-amber-400 mt-1">0</h2>
+                <div class="text-sm font-bold text-slate-300 mt-2 pt-2 border-t border-slate-800">
+                    2&gt;5: <span id="ms-ossla-s2_5" class="text-amber-400 font-extrabold text-base">0</span> &nbsp;|&nbsp; 5&gt;: <span id="ms-ossla-s5_up" class="text-amber-400 font-extrabold text-base">0</span>
+                </div>
+            </div>
+            <div class="bg-[#0b0f19] p-4 rounded-xl border border-slate-800">
+                <p class="text-xs font-bold text-purple-400 uppercase">Overall (Miss+Side) %</p>
+                <h2 id="ms-ossla-comb-perc" class="text-2xl font-extrabold text-purple-400 mt-1">0.00%</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<!-- Master Switching & Auto-Sync Script -->
+<script>
+function showMasterSystem(sysId, btnEl) {
+    document.querySelectorAll('.master-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(sysId).classList.add('active');
+    document.querySelectorAll('.master-navigation-bar button').forEach(b => b.classList.remove('active'));
+    if(btnEl) btnEl.classList.add('active');
+    window.scrollTo({top:0, behavior:'smooth'});
+    if(sysId === 'masterSummaryRoot') {
+        updateMasterSummaryData();
+    }
+}
+
+function syncManualDates(source) {
+    let fromVal = document.getElementById('ms-manual-from').value;
+    let toVal = document.getElementById('ms-manual-to').value;
+    
+    if(document.getElementById('ossla_fromDate')) document.getElementById('ossla_fromDate').value = fromVal;
+    if(document.getElementById('ossla_toDate')) document.getElementById('ossla_toDate').value = toVal;
+    
+    if(document.getElementById('tat_fromDateFilter')) document.getElementById('tat_fromDateFilter').value = fromVal;
+    if(document.getElementById('tat_toDateFilter')) document.getElementById('tat_toDateFilter').value = toVal;
+}
+
+function updateMasterSummaryData() {
+    let fcCode = document.getElementById('tat_fcCodeInput').value.trim().toUpperCase() || "HBA4";
+    document.getElementById('ms-fc-badge').textContent = "FC CODE: " + fcCode;
+
+    let fromDate = document.getElementById('ossla_fromDate').value;
+    let toDate = document.getElementById('ossla_toDate').value;
+    if(fromDate && document.getElementById('ms-manual-from').value !== fromDate) {
+        document.getElementById('ms-manual-from').value = fromDate;
+    }
+    if(toDate && document.getElementById('ms-manual-to').value !== toDate) {
+        document.getElementById('ms-manual-to').value = toDate;
+    }
+
+    let tatTotalRows = rows.length;
+    let tatOnTimeCount = rows.filter(r => r.status === 'On Time' && !r.side).length;
+    document.getElementById('ms-tat-on95').textContent = document.getElementById('tat_on95').textContent;
+    document.getElementById('ms-tat-late95').textContent = document.getElementById('tat_late95').textContent;
+    document.getElementById('ms-tat-side95').textContent = document.getElementById('tat_side95').textContent;
+    document.getElementById('ms-tat-overall95').textContent = document.getElementById('tat_overall95').textContent;
+    document.getElementById('ms-tat-count').textContent = tatTotalRows;
+    document.getElementById('ms-tat-ontime-badge').textContent = "On-Time: " + tatOnTimeCount;
+
+    document.getElementById('ms-yms-score').textContent = document.getElementById('kpi-score').textContent;
+    document.getElementById('ms-yms-total').textContent = document.getElementById('kpi-total').textContent;
+    document.getElementById('ms-yms-defects').textContent = document.getElementById('kpi-defects').textContent;
+    document.getElementById('ms-yms-closed-total').textContent = document.getElementById('kpi-closed-total').textContent;
+    document.getElementById('ms-yms-checkin').textContent = document.getElementById('kpi-closed-in').textContent + " " + document.getElementById('kpi-closed-in-perc').textContent;
+    document.getElementById('ms-yms-dock').textContent = document.getElementById('kpi-closed-out').textContent + " " + document.getElementById('kpi-closed-out-perc').textContent;
+
+    document.getElementById('ms-ossla-qty').textContent = document.getElementById('ossla_cardReceived').textContent;
+    document.getElementById('ms-ossla-miss').textContent = document.getElementById('ossla_cardMiss').textContent;
+    document.getElementById('ms-ossla-miss-perc').textContent = document.getElementById('ossla_cardMissPerc').textContent;
+    document.getElementById('ms-ossla-m2_5').textContent = document.getElementById('ossla_panelMiss2_5').textContent;
+    document.getElementById('ms-ossla-m5_up').textContent = document.getElementById('ossla_panelMiss5_up').textContent;
+    
+    document.getElementById('ms-ossla-side').textContent = document.getElementById('ossla_cardSideline').textContent;
+    document.getElementById('ms-ossla-side-perc').textContent = document.getElementById('ossla_cardSidePerc').textContent;
+    document.getElementById('ms-ossla-s2_5').textContent = document.getElementById('ossla_panelSide2_5').textContent;
+    document.getElementById('ms-ossla-s5_up').textContent = document.getElementById('ossla_panelSide5_up').textContent;
+
+    document.getElementById('ms-ossla-comb-perc').textContent = document.getElementById('ossla_cardCombinedPerc').textContent;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    let today = new Date().toISOString().slice(0,10);
+    if(document.getElementById('ms-manual-from')) document.getElementById('ms-manual-from').value = today;
+    if(document.getElementById('ms-manual-to')) document.getElementById('ms-manual-to').value = today;
+    updateMasterSummaryData();
+});
+</script>
+ 
+<!-- ================= 2. TAT REPORT SCRIPT ================= -->
+<script>
+let dock=[], yms={}, jiraMap=new Map(), rows=[];
+let statusChartInst = null;
+let tatChartInst = null;
+const tat_$=id=>document.getElementById(id);
+ 
+function updateHeaderFc() {
+    let fc = tat_$('tat_fcCodeInput').value.trim().toUpperCase();
+    tat_$('fcTatLabel').textContent = (fc ? fc : 'HBA4') + ' TAT';
+}
+ 
+function tat_page(id,b){document.querySelectorAll('#tatRoot .page').forEach(x=>x.classList.remove('active'));tat_$('tat_'+id).classList.add('active');document.querySelectorAll('#tatRoot nav button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');tat_render()}
+function norm(x){return String(x??'').trim().toLowerCase().replace(/[^a-z0-9]/g,'')}
+function parseCSV(t){let a=[],r=[],c='',q=false;for(let i=0;i<t.length;i++){let x=t[i],n=t[i+1];if(x=='"'&&q&&n=='"'){c+='"';i++;continue}if(x=='"'){q=!q;continue}if(x==','&&!q){r.push(c);c='';continue}if((x=='\n'||x=='\r')&&!q){if(x=='\r'&&n=='\n')i++;r.push(c);if(r.some(v=>v.trim()))a.push(r);r=[];c='';continue}c+=x}r.push(c);if(r.some(v=>v.trim()))a.push(r);return a}
+function parseText(t){return parseCSV(t.replace(/\t/g,','))}
+function col(h,names){return h.findIndex(x=>names.includes(norm(x))||names.some(n=>norm(x).includes(n)))}
+function parseDate(v){if(v instanceof Date)return v;if(v==null||String(v).trim()=='')return null;let s=String(v).trim().replace(/\s*IST\s*$/i,'');let d=new Date(s);if(!isNaN(d))return d;let m=s.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0)):null}
+function pct(a,p=.95){a=a.filter(Number.isFinite).sort((x,y)=>x-y);if(!a.length)return null;let i=(a.length-1)*p,l=Math.floor(i),u=Math.ceil(i);return l===u?a[l]:a[l]+(a[u]-a[l])*(i-l)}
+function fmt(h){if(h==null||!Number.isFinite(h))return 'NA';let neg=h<0;h=Math.abs(h);let hh=Math.floor(h),mm=Math.floor((h-hh)*60),ss=Math.round((((h-hh)*60)-mm)*60);if(ss===60){ss=0;mm++}if(mm===60){mm=0;hh++}return (neg?'-':'')+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')}
+function isoDate(d){return d?new Date(d).toISOString().slice(0,10):''}
+async function tat_readFile(id){let f=tat_$(id).files[0];if(!f)return null;return await f.text()}
+ 
+async function tat_processFiles(){
+try{
+let dt = await tat_readFile('tat_dockFile');
+let yt = await tat_readFile('tat_ymsFile');
+let jt = await tat_readFile('tat_jiraFile');
+let manualText = tat_$('tat_jiraManualText').value.trim();
+let targetFc = tat_$('tat_fcCodeInput').value.trim().toUpperCase();
+ 
+if(!dt || !yt) { alert("Please upload both Dockmaster and YMS CSV files."); return; }
+if(!targetFc) { alert("Please enter a valid FC Code."); return; }
+ 
+let dm=parseCSV(dt), ym=parseCSV(yt);
+let yh=ym[0].map(String), yi=yh.findIndex(x=>norm(x)==='isa'), yd=yh.findIndex(x=>norm(x)==='dateutc'), ye=yh.findIndex(x=>norm(x)==='eventtype');
+yms={};
+ym.slice(1).forEach(r=>{if(ye>=0&&norm(r[ye])!=='precheckin')return;let id=String(r[yi]??'').trim();if(!id)return;let d=parseDate(r[yd]);if(d)yms[id]=new Date(d.getTime()+330*60000)});
+ 
+jiraMap = new Map();
+if (jt) {
+    let lines = jt.split(/\r?\n/);
+    lines.forEach(line => {
+        if (!targetFc || line.toUpperCase().includes(targetFc)) {
+            let matches = line.match(/\d{10,}/g);
+            if (matches) {
+                let issueMatch = line.match(/Issue\s*[:\-]\s*([^,\[]+)/i);
+                let issueDesc = issueMatch ? issueMatch[1].trim() : "JIRA Raised";
+                matches.forEach(num => { jiraMap.set(num.trim(), issueDesc); });
+            }
+        }
+    });
+}
+if (manualText) {
+    let lines = manualText.split(/\r?\n/);
+    lines.forEach(line => {
+        let matches = line.match(/\d{10,}/g);
+        if (matches) { matches.forEach(num => { jiraMap.set(num.trim(), "JIRA Raised"); }); }
+    });
+}
+ 
+let h=dm[0].map(String);let ai=col(h,['appointmentid','appointment id']), fi=col(h,['expectedarrivaldate']), qi=col(h,['closeddate']), ti=col(h,['type']);
+rows=[];
+dm.slice(1).forEach(r=>{
+    if(ti>=0&&norm(r[ti])!=='carp')return;
+    let id=String(r[ai]??'').trim();
+    if(!id)return;
+    let app=parseDate(r[fi]);
+    let closed=parseDate(r[qi]);
+    let pre=yms[id]||null;
+    
+    let status = 'On Time';
+    if (!pre || !app) { status = 'On Time'; } else if ((pre - app) > 30 * 60000) { status = 'Late'; }
+ 
+    let tat = null;
+    if (status === 'Late') {
+        if (closed && pre) tat = (closed - pre) / 3600000;
+        else if (closed && app) tat = (closed - app) / 3600000;
+    } else {
+        if (closed && app) tat = (closed - app) / 3600000;
+        else if (closed && pre) tat = (closed - pre) / 3600000;
+    }
+ 
+    let isSide = jiraMap.has(id);
+    let sj = isSide ? id : 'NOT SIDELINE';
+    let jiraIssue = isSide ? jiraMap.get(id) : '—';
+ 
+    let tatMiss = 'Not Miss';
+    if (tat !== null && Number.isFinite(tat)) {
+        if (isSide) { if (tat > 10) tatMiss = 'TAT Miss'; } 
+        else if (status === 'On Time') { if (tat > 3) tatMiss = 'TAT Miss'; } 
+        else if (status === 'Late') { if (tat > 10) tatMiss = 'TAT Miss'; }
+    }
+ 
+    rows.push({id, app, closed, pre, status, sj, jiraIssue, tat, tatMiss, date:isoDate(closed||app||pre), side:isSide});
+});
+ 
+tat_$('tat_status').textContent=rows.length+' rows processed for '+targetFc;
+tat_render();
+alert('TAT Report processed successfully for '+targetFc+': '+rows.length+' rows.');
+}catch(e){alert(e.message)}
+}
+ 
+const centerBreakdownPlugin = {
+    id: 'centerBreakdownPlugin',
+    beforeDraw(chart) {
+        if (chart.config.type !== 'doughnut') return;
+        const { width, height, ctx } = chart;
+        ctx.restore();
+        let dataset = chart.data.datasets[0].data;
+        let onTimeCount = dataset[0] || 0;
+        let lateCount = dataset[1] || 0;
+        let sidelineCount = dataset[2] || 0;
+        let total = onTimeCount + lateCount + sidelineCount;
+        ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+        let centerX = width / 2; let centerY = height / 2;
+        ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#64748b';
+       ctx.fillText("TOTAL: " + total, centerX, centerY - 28);
+        ctx.font = 'bold 13px Arial'; ctx.fillStyle = '#16a34a';
+       ctx.fillText("On Time: " + onTimeCount, centerX, centerY - 7);
+        ctx.font = 'bold 13px Arial'; ctx.fillStyle = '#dc2626';
+       ctx.fillText("Late: " + lateCount, centerX, centerY + 14);
+        ctx.font = 'bold 13px Arial'; ctx.fillStyle = '#d97706';
+       ctx.fillText("Sideline: " + sidelineCount, centerX, centerY + 35);
+        ctx.save();
+    }
+};
+ 
+function updateCharts(onCount, lateCount, sideCount, on95Val, late95Val, side95Val, overall95Val) {
+   tat_$('tat_chartsPanel').style.display = 'block';
+   if(statusChartInst) statusChartInst.destroy();
+    if(tatChartInst) tatChartInst.destroy();
+ 
+    statusChartInst = new Chart(tat_$('tat_statusChart').getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['On Time', 'Late', 'Sideline'], datasets: [{ data: [onCount, lateCount, sideCount], backgroundColor: ['#16a34a', '#dc2626', '#d97706'], borderWidth: 0, hoverOffset: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: {font: {size: 13}} }, title: { display: true, text: 'Status Volume Breakdown', font: {size: 16, weight: 'bold'}, color: '#1e293b' } } },
+        plugins: [centerBreakdownPlugin]
+    });
+ 
+    tatChartInst = new Chart(tat_$('tat_tatChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['On Time', 'Late', 'Sideline', 'Overall'], datasets: [{ label: '95th Percentile (Hours)', data: [on95Val, late95Val, side95Val, overall95Val], backgroundColor: ['#16a34a', '#dc2626', '#d97706', '#1e293b'], borderRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: '95th Percentile TAT Comparison', font: {size: 16, weight: 'bold'}, color: '#1e293b' } }, scales: { y: { beginAtZero: true, title: {display: true, text: 'Hours', font: {weight: 'bold'}} } } }
+    });
+}
+ 
+function tat_render(){
+let fromDate = tat_$('tat_fromDateFilter').value;
+let toDate = tat_$('tat_toDateFilter').value;
+ 
+let data = rows.filter(r => {
+    if (!r.date) return false;
+    if (fromDate && r.date < fromDate) return false;
+    if (toDate && r.date > toDate) return false;
+    return true;
+});
+ 
+let on=data.filter(r=>r.status==='On Time'&&!r.side).map(r=>r.tat).filter(Number.isFinite);
+let late=data.filter(r=>r.status==='Late'&&!r.side).map(r=>r.tat).filter(Number.isFinite);
+let side=data.filter(r=>r.side).map(r=>r.tat).filter(Number.isFinite);
+let all=data.map(r=>r.tat).filter(Number.isFinite);
+ 
+let onVal = on.length ? pct(on) : null;
+let lateVal = late.length ? pct(late) : null;
+let sideVal = side.length ? pct(side) : null;
+ 
+let onElem = tat_$('tat_on95');
+let lateElem = tat_$('tat_late95');
+let sideElem = tat_$('tat_side95');
+ 
+onElem.textContent = onVal !== null ? fmt(onVal) : '—';
+onElem.className = "value " + (onVal !== null ? (onVal <= 3 ? "text-success" : "text-danger") : "text-dark");
+ 
+lateElem.textContent = lateVal !== null ? fmt(lateVal) : '—';
+lateElem.className = "value " + (lateVal !== null ? (lateVal <= 10 ? "text-success" : "text-danger") : "text-dark");
+ 
+sideElem.textContent = sideVal !== null ? fmt(sideVal) : '—';
+sideElem.className = "value " + (sideVal !== null ? (sideVal <= 10 ? "text-success" : "text-danger") : "text-dark");
+ 
+tat_$('tat_overall95').textContent = all.length ? fmt(pct(all)) : '—';
+tat_$('tat_count').textContent = data.length;
+ 
+tat_$('tat_tbody').innerHTML=data.map(r=>`<tr><td>${esc(r.id)}</td><td>${dt(r.app)}</td><td>${dt(r.closed)}</td><td>${dt(r.pre)}</td><td><span class="badge ${r.status==='On Time'?'good':r.status==='Late'?'late':'neutral'}">${r.status||'NA'}</span></td><td>${esc(r.sj)}</td><td>${esc(r.jiraIssue)}</td><td>${fmt(r.tat)}</td><td><span class="miss-badge ${r.tatMiss==='TAT Miss'?'miss-yes':'miss-no'}">${r.tatMiss}</span></td></tr>`).join('');
+ 
+if(data.length > 0) {
+    updateCharts(on.length, late.length, side.length, onVal||0, lateVal||0, sideVal||0, pct(all)||0);
+} else {
+   tat_$('tat_chartsPanel').style.display = 'none';
+}
+
+updateMasterSummaryData();
+}
+ 
+function dt(x){return x?new Date(x).toLocaleString('en-GB',{hour12:false}):'NA'}
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function clearDate(){
+    tat_$('tat_fromDateFilter').value='';
+    tat_$('tat_toDateFilter').value='';
+    tat_render();
+}
+function tat_resetAll(){
+    rows=[];dock=[];yms={};jiraMap=new Map();tat_render();tat_$('tat_status').textContent='Ready';
+    if(statusChartInst) { statusChartInst.destroy(); statusChartInst = null; }
+    if(tatChartInst) { tatChartInst.destroy(); tatChartInst = null; }
+   tat_$('tat_chartsPanel').style.display = 'none';
+   tat_$('tat_dockFile').value='';tat_$('tat_ymsFile').value='';tat_$('tat_jiraFile').value='';tat_$('tat_jiraManualText').value='';
+   tat_$('tat_fromDateFilter').value='';tat_$('tat_toDateFilter').value='';
+}
+function tat_loadDemo(){let now=new Date();let a=new Date(now);a.setHours(8,0,0,0);let c=new Date(a);c.setHours(10);let p=new Date(a);p.setMinutes(20);rows=[{id:'DEMO001',app:a,closed:c,pre:p,status:'On Time',sj:'NOT SIDELINE',jiraIssue:'—',tat:2,tatMiss:'Not Miss',date:isoDate(c),side:false},{id:'DEMO002',app:a,closed:new Date(a.getTime()+5*3600000),pre:new Date(a.getTime()+60*60000),status:'Late',sj:'NOT SIDELINE',jiraIssue:'—',tat:4,tatMiss:'Not Miss',date:isoDate(c),side:false},{id:'DEMO003',app:a,closed:new Date(a.getTime()+3*3600000),pre:new Date(a.getTime()+20*60000),status:'On Time',sj:'DEMO003',jiraIssue:'image mismatch',tat:3,tatMiss:'Not Miss',date:isoDate(c),side:true}];tat_$('tat_status').textContent='Demo data';tat_render()}
+function tat_downloadCSV(){
+    let fromDate = tat_$('tat_fromDateFilter').value;
+    let toDate = tat_$('tat_toDateFilter').value;
+    let data = rows.filter(r => {
+        if (!r.date) return false;
+        if (fromDate && r.date < fromDate) return false;
+        if (toDate && r.date > toDate) return false;
+        return true;
+    });
+   if(!data.length)return alert('No data.');
+    let h=['Appointment Id','ISA APP','CLOSED','PRE CHECKIN TIME','STATUS LATE/ONTIME','SIDELINE/JIRA','JIRA ISSUE','TAT HRS','TAT MISS','DATE'];
+    let s=[h.join(',')];
+   data.forEach(r=>s.push([r.id,dt(r.app),dt(r.closed),dt(r.pre),r.status,r.sj,r.jiraIssue,r.tat??'',r.tatMiss,r.date].map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')));
+    let b=new Blob([s.join('\n')],{type:'text/csv'});
+    let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='TAT_Report.csv';a.click()}
+tat_render();
+</script>
+ 
+<!-- ================= 4. OSSLA & ISS SCRIPT ================= -->
+<script>
+    const ossla_today = new Date();
+    const ossla_pastDate = new Date();
+   ossla_pastDate.setDate(ossla_today.getDate() - 7);
+ 
+   document.getElementById('ossla_toDate').valueAsDate = ossla_today;
+   document.getElementById('ossla_fromDate').valueAsDate = ossla_pastDate;
+ 
+    let ossla_queryRawText = "";
+    let ossla_issRawText = "";
+    let ossla_queryReady = false;
+    let ossla_parsedRows = [];
+    let ossla_missYesRows = [];
+    let ossla_sidelineRows = [];
+    let ossla_manualIssEntries = [];
+    let ossla_ringChart = null;
+    let ossla_sortDirections = {};
+
+    function ossla_sortTable(tableType, column) {
+        let rowsArr = (tableType === 'miss') ? ossla_missYesRows : ossla_sidelineRows;
+        let sortKey = `${tableType}_${column}`;
+        let currentDir = ossla_sortDirections[sortKey] || 'asc';
+        let multiplier = (currentDir === 'asc') ? 1 : -1;
+        ossla_sortDirections[sortKey] = (currentDir === 'asc') ? 'desc' : 'asc';
+
+        rowsArr.sort((a, b) => {
+            let valA = a[column];
+            let valB = b[column];
+            if (valA == null) valA = '';
+            if (valB == null) valB = '';
+            
+            if (column === 'qty' || column === 'dwell') {
+                return (parseFloat(valA) - parseFloat(valB)) * multiplier;
+            } else {
+                return String(valA).localeCompare(String(valB)) * multiplier;
+            }
+        });
+
+        if (tableType === 'miss') ossla_renderMissTable();
+        else ossla_renderSidelineTable();
+    }
+ 
+    function ossla_updateDateTime() {
+        const now = new Date();
+        const formattedString = now.toLocaleString('en-US', { 
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', 
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
+        });
+        const clockEl = document.getElementById('ossla_liveClock');
+        if (clockEl) clockEl.innerText = formattedString;
+    }
+ 
+   ossla_updateDateTime();
+   setInterval(ossla_updateDateTime, 1000);
+ 
+    function ossla_addManualIssEntry() {
+        const asin = document.getElementById('ossla_manAsin').value.trim();
+        const ttNo = document.getElementById('ossla_manTtNo').value.trim();
+        const title = document.getElementById('ossla_manTitle').value.trim();
+ 
+        if (!asin) {
+           alert("Please enter ASIN for manual ISS entry.");
+            return;
+        }
+ 
+       ossla_manualIssEntries.push({
+            asin: asin,
+            tt_no: ttNo || "TT-MANUAL",
+            title: title || "Manual Sideline Issue"
+        });
+ 
+       document.getElementById('ossla_manAsin').value = "";
+        document.getElementById('ossla_manTtNo').value = "";
+       document.getElementById('ossla_manTitle').value = "";
+ 
+       ossla_renderManualList();
+    }
+ 
+    function ossla_removeManualIssEntry(index) {
+       ossla_manualIssEntries.splice(index, 1);
+       ossla_renderManualList();
+    }
+ 
+    function ossla_renderManualList() {
+        const listContainer = document.getElementById('ossla_manualIssList');
+        if (!listContainer) return;
+ 
+        if (ossla_manualIssEntries.length === 0) {
+           listContainer.innerHTML = `<span style="font-size: 0.7rem; color: var(--ossla-muted);">No manual entries added yet.</span>`;
+            return;
+        }
+ 
+       listContainer.innerHTML = "";
+        ossla_manualIssEntries.forEach((item, idx) => {
+           listContainer.innerHTML += `
+               <div class="manual-item">
+                   <span><strong>ASIN:</strong> ${item.asin} | <strong>TT:</strong> ${item.tt_no} | <strong>Title:</strong> ${item.title}</span>
+                   <button type="button" class="cancel-file-btn" onclick="ossla_removeManualIssEntry(${idx})" style="padding:0.1rem 0.3rem; font-size:0.65rem;">❌</button>
+               </div>
+            `;
+        });
+    }
+ 
+    async function ossla_handleFile(event, type) {
+       event.stopPropagation();
+        const file = event.target.files[0];
+        if (!file) return;
+ 
+        const promptElem = document.getElementById(type === 'query' ? 'ossla_queryPromptText' : 'ossla_issPromptText');
+        const displayElem = document.getElementById(type === 'query' ? 'ossla_queryFileDisplay' : 'ossla_issFileDisplay');
+        let fileContent = "";
+ 
+        if (file.name.endsWith('.zip')) {
+            try {
+                const zip = new JSZip();
+                const zipContent = await zip.loadAsync(file);
+                for (let filename of Object.keys(zipContent.files)) {
+                    if (!zipContent.files[filename].dir) {
+                        fileContent = await zipContent.files[filename].async("text");
+                        break;
+                    }
+                }
+            } catch (err) {
+                alert("Error reading ZIP file");
+               return;
+            }
+        } else {
+            fileContent = await file.text();
+        }
+ 
+        if (type === 'query') {
+           ossla_queryRawText = fileContent;
+           ossla_queryReady = true;
+           ossla_extractContainerTypes(fileContent);
+        } else {
+           ossla_issRawText = fileContent;
+        }
+ 
+        if (promptElem) promptElem.style.display = 'none';
+        if (displayElem) {
+           displayElem.innerHTML = `
+               <div class="file-info-box">
+                   <span class="file-info">Loaded: ${file.name}</span>
+                   <button class="cancel-file-btn" onclick="ossla_clearFile('${type}', event)" title="Cancel/Remove File">❌ Remove</button>
+               </div>
+            `;
+        }
+    }
+ 
+    function ossla_extractContainerTypes(text) {
+        const lines = text.split(/\r?\n/);
+        if (lines.length === 0) return;
+ 
+        let idxContainer = 6;
+        let startRow = 0;
+        const headers = lines[0].split(/[\t,]/).map(h => h.trim().toLowerCase().replace(/['"]+/g, ''));
+        const cIdx = headers.indexOf('received_container_type');
+        if (cIdx !== -1) {
+           idxContainer = cIdx;
+            startRow = 1;
+        }
+ 
+        const uniqueTypes = new Set();
+        for (let i = startRow; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const cols = lines[i].split(/[\t,]/).map(c => c.trim().replace(/['"]+/g, ''));
+            const val = cols[idxContainer] || cols[6] || "";
+            if (val) uniqueTypes.add(val.toLowerCase());
+        }
+ 
+        const containerGroup = document.getElementById('ossla_containerCheckboxGroup');
+        if (!containerGroup) return;
+ 
+       containerGroup.innerHTML = "";
+        if (uniqueTypes.size === 0) {
+           containerGroup.innerHTML = `<span style="font-size: 0.75rem; color: var(--ossla-muted);">No container types found</span>`;
+            return;
+        }
+ 
+       uniqueTypes.forEach(type => {
+            const isDefaultChecked = (type === 'case' || type === 'pallet');
+            const checkedAttr = isDefaultChecked ? 'checked' : '';
+           containerGroup.innerHTML += `
+               <label><input type="checkbox" class="ossla-container-chk" value="${type}" ${checkedAttr}> ${type.toUpperCase()}</label>
+            `;
+        });
+    }
+ 
+    function ossla_clearFile(type, event) {
+       event.stopPropagation();
+        if (type === 'query') {
+           ossla_queryRawText = "";
+           ossla_queryReady = false;
+           document.getElementById('ossla_queryFile').value = "";
+           document.getElementById('ossla_queryPromptText').style.display = 'block';
+           document.getElementById('ossla_queryFileDisplay').innerHTML = "";
+           document.getElementById('ossla_containerCheckboxGroup').innerHTML = `<span style="font-size: 0.75rem; color: var(--ossla-muted); padding: 0.2rem;">Upload query file first to load container types</span>`;
+        } else {
+           ossla_issRawText = "";
+            document.getElementById('ossla_issFile').value = "";
+           document.getElementById('ossla_issPromptText').style.display = 'block';
+           document.getElementById('ossla_issFileDisplay').innerHTML = "";
+        }
+    }
+ 
+    function ossla_runAutoCalculation() {
+        if (!ossla_queryReady) {
+           alert("Please upload Query Data file first!");
+            return;
+        }
+ 
+        const selectedContainers = [];
+       document.querySelectorAll('.ossla-container-chk').forEach(chk => {
+            if (chk.checked) selectedContainers.push(chk.value.toLowerCase());
+        });
+ 
+        if (selectedContainers.length === 0) {
+           alert("Please select at least one container type from the list!");
+            return;
+        }
+ 
+        const fcCode = document.getElementById('ossla_fcCodeInput').value.trim().toUpperCase() || "N/A";
+ 
+        const btn = document.getElementById('ossla_submitBtn');
+        btn.disabled = true;
+        btn.innerText = "⏳ Processing Analysis...";
+ 
+        setTimeout(() => {
+            try {
+                const fromDate = document.getElementById('ossla_fromDate').value;
+                const toDate = document.getElementById('ossla_toDate').value;
+ 
+                const lines = ossla_queryRawText.split(/\r?\n/);
+               ossla_parsedRows = [];
+ 
+                let totalRec = 0;
+                let m2_5 = 0;
+                let m5_up = 0;
+                let s2_5 = 0;
+                let s5_up = 0;
+ 
+                const issMap = new Map();
+ 
+                if (ossla_issRawText) {
+                   const issLines = ossla_issRawText.split(/\r?\n/);
+                   let issAsinIdx = 5, issTtIdx = 2, issTitleIdx = 3;
+ 
+                    if (issLines.length > 0) {
+                       const issHeaders = issLines[0].split(/[\t,]/).map(h => h.trim().toLowerCase().replace(/['"]+/g, ''));
+                       if (issHeaders.indexOf('asin') !== -1) issAsinIdx = issHeaders.indexOf('asin');
+                        if (issHeaders.indexOf('shortid') !== -1 || issHeaders.indexOf('short_id') !== -1 || issHeaders.indexOf('tt_no') !== -1) {
+                            issTtIdx = issHeaders.indexOf('shortid') !== -1 ? issHeaders.indexOf('shortid') : (issHeaders.indexOf('short_id') !== -1 ? issHeaders.indexOf('short_id') : issHeaders.indexOf('tt_no'));
+                        }
+                        if (issHeaders.indexOf('title') !== -1) {
+                           issTitleIdx = issHeaders.indexOf('title');
+                        }
+                    }
+ 
+                   for (let j = 1; j < issLines.length; j++) {
+                        if (!issLines[j].trim()) continue;
+                       const parts = issLines[j].split(/[\t,]/).map(c => c.trim().replace(/['"]+/g, ''));
+                       const asinKey = (parts[issAsinIdx] || parts[5] || "").toLowerCase();
+                        if (asinKey) {
+                            issMap.set(asinKey, {
+                                tt_no: parts[issTtIdx] || parts[2] || "TT-9988",
+                                title: parts[issTitleIdx] || parts[3] || "Inbound Discrepancy / Sideline Issue"
+                           });
+                        }
+                    }
+                }
+ 
+               ossla_manualIssEntries.forEach(m => {
+                    const asinKey = m.asin.toLowerCase();
+                    issMap.set(asinKey, {
+                        tt_no: m.tt_no,
+                        title: m.title
+                    });
+                });
+ 
+                let idxScannable = 0, idxWh = 1, idxAppt = 2, idxAsin = 4, idxQty = 5, idxContainer = 6, idxCheckin = 9, idxRec = 10, idxDwell = 11, idxDay = 12;
+                let startRow = 0;
+                if (lines.length > 0 && lines[0].toLowerCase().includes('received')) {
+                   startRow = 1;
+                   const headers = lines[0].split(/[\t,]/).map(h => h.trim().toLowerCase().replace(/['"]+/g, ''));
+                   const findIdx = (names) => {
+                       for(let n of names) {
+                           let i = headers.indexOf(n);
+                           if(i !== -1) return i;
+                       }
+                       return -1;
+                    };
+                   if(findIdx(['received_scannable_id']) !== -1) idxScannable = findIdx(['received_scannable_id']);
+                   if(findIdx(['warehouse_id']) !== -1) idxWh = findIdx(['warehouse_id']);
+                   if(findIdx(['inbound_ship_appointment_id']) !== -1) idxAppt = findIdx(['inbound_ship_appointment_id']);
+                   if(findIdx(['asin']) !== -1) idxAsin = findIdx(['asin']);
+                   if(findIdx(['received_qty']) !== -1) idxQty = findIdx(['received_qty']);
+                   if(findIdx(['received_container_type']) !== -1) idxContainer = findIdx(['received_container_type']);
+                   if(findIdx(['appt_checkin_date_local']) !== -1) idxCheckin = findIdx(['appt_checkin_date_local']);
+                   if(findIdx(['received_date_local']) !== -1) idxRec = findIdx(['received_date_local']);
+                   if(findIdx(['dwell']) !== -1) idxDwell = findIdx(['dwell']);
+                   if(findIdx(['received_on_day']) !== -1) idxDay = findIdx(['received_on_day']);
+                }
+ 
+                const missGroupMap = new Map();
+                const sidelineGroupMap = new Map();
+ 
+                for (let i = startRow; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                   const cols = lines[i].split(/[\t,]/).map(c => c.trim().replace(/['"]+/g, ''));
+                    if (cols.length < 3) continue;
+ 
+                   const dayVal = cols[idxDay] || cols[12] || "";
+                   const containerVal = (cols[idxContainer] || cols[6] || "").toLowerCase().trim();
+                   const asinVal = cols[idxAsin] || cols[4] || "ASIN001";
+                   const qtyVal = parseFloat(cols[idxQty] || cols[5]) || 1; // Corrected to use received_qty column sum instead of row count
+ 
+                    if (!selectedContainers.includes(containerVal)) continue;
+ 
+                   const checkinStr = cols[idxCheckin] || cols[9];
+                   const receivedStr = cols[idxRec] || cols[10];
+ 
+                    let dwellVal = 0;
+                    if (checkinStr && receivedStr) {
+                        const checkinDate = new Date(checkinStr);
+                        const receivedDate = new Date(receivedStr);
+                        if (!isNaN(checkinDate) && !isNaN(receivedDate)) {
+                            const diffMs = receivedDate - checkinDate;
+                            dwellVal = diffMs / (1000 * 60 * 60);
+                            if (dwellVal < 0) dwellVal = 0;
+                        }
+                    }
+ 
+                    if (dwellVal === 0 && idxDwell !== -1 && cols[idxDwell]) {
+                       dwellVal = parseFloat(cols[idxDwell]) || 0;
+                    }
+ 
+                   let cleanDay = dayVal ? dayVal.substring(0, 10) : "";
+                    if (fromDate && toDate && cleanDay) {
+                        if (cleanDay < fromDate || cleanDay > toDate) continue;
+                    }
+ 
+                    totalRec += qtyVal;
+ 
+                    let osslaMissCol = "No";
+                    let xlookupResult = "Not Found (#N/A)";
+                    let statusLabel = "Normal";
+                    let issTtNo = "-";
+                    let issTitle = "-";
+ 
+                    if (dwellVal >= 48) {
+                        osslaMissCol = "Yes";
+                        const cleanAsin = asinVal.toLowerCase();
+                        const groupKey = `${asinVal}_${containerVal}_${cleanDay}_${fcCode}`;
+ 
+                        if (issMap.has(cleanAsin)) {
+                            const matchData = issMap.get(cleanAsin);
+                            xlookupResult = "Found (Matched)";
+                            issTtNo = matchData.tt_no;
+                            issTitle = matchData.title;
+ 
+                            if (dwellVal >= 48 && dwellVal <= 120) {
+                                s2_5 += qtyVal;
+                                statusLabel = "Sideline (2>5 Days)";
+                            } else if (dwellVal > 120) {
+                                s5_up += qtyVal;
+                                statusLabel = "Sideline (5> Days)";
+                            }
+ 
+                            if (sidelineGroupMap.has(groupKey)) {
+                                let existing = sidelineGroupMap.get(groupKey);
+                                existing.total_qty += qtyVal;
+                                existing.total_dwell += dwellVal * qtyVal;
+                            } else {
+                                sidelineGroupMap.set(groupKey, {
+                                    asin: asinVal,
+                                    fc: fcCode,
+                                    container: containerVal.toUpperCase(),
+                                    date: cleanDay,
+                                    total_qty: qtyVal,
+                                    total_dwell: dwellVal * qtyVal,
+                                    iss_tt_no: issTtNo,
+                                    iss_title: issTitle,
+                                    status: statusLabel
+                                });
+                            }
+                        } else {
+                            if (dwellVal >= 48 && dwellVal <= 120) {
+                                m2_5 += qtyVal;
+                                statusLabel = "OSSLA Miss (2>5 Days)";
+                            } else if (dwellVal > 120) {
+                                m5_up += qtyVal;
+                                statusLabel = "OSSLA Miss (5> Days)";
+                            }
+ 
+                            if (missGroupMap.has(groupKey)) {
+                                let existing = missGroupMap.get(groupKey);
+                                existing.total_qty += qtyVal;
+                                existing.total_dwell += dwellVal * qtyVal;
+                            } else {
+                                missGroupMap.set(groupKey, {
+                                    asin: asinVal,
+                                    fc: fcCode,
+                                    container: containerVal.toUpperCase(),
+                                    date: cleanDay,
+                                    total_qty: qtyVal,
+                                    total_dwell: dwellVal * qtyVal,
+                                    status: statusLabel
+                                });
+                            }
+                        }
+                    }
+ 
+                   ossla_parsedRows.push({
+                        received_scannable_id: cols[idxScannable] || cols[0] || "SCN-101",
+                        warehouse_id: cols[idxWh] || cols[1] || "WH-01",
+                        fc: fcCode,
+                        inbound_ship_appointment_id: cols[idxAppt] || cols[2] || "APT-11",
+                        asin: asinVal,
+                        received_qty: qtyVal,
+                        received_container_type: containerVal,
+                        dwell: dwellVal.toFixed(2),
+                        received_on_day: dayVal,
+                        ossla_miss: osslaMissCol,
+                        iss_tt_no: issTtNo,
+                        iss_title: issTitle,
+                        xlookup_match: xlookupResult,
+                        STATUS: statusLabel
+                   });
+                }
+ 
+               ossla_missYesRows = [];
+                missGroupMap.forEach((val) => {
+                   const avgDwell = (val.total_dwell / val.total_qty).toFixed(2);
+                   ossla_missYesRows.push({ asin: val.asin, fc: val.fc, container: val.container, date: val.date, total_qty: val.total_qty, dwell: avgDwell, status: val.status });
+                });
+ 
+               ossla_sidelineRows = [];
+                sidelineGroupMap.forEach((val) => {
+                   const avgDwell = (val.total_dwell / val.total_qty).toFixed(2);
+                   ossla_sidelineRows.push({ asin: val.asin, fc: val.fc, container: val.container, date: val.date, total_qty: val.total_qty, dwell: avgDwell, tt: val.iss_tt_no, title: val.iss_title, status: val.status });
+                });
+ 
+                const totalMiss = m2_5 + m5_up;
+                const totalSide = s2_5 + s5_up;
+ 
+                const combinedQty = totalMiss + totalSide;
+                const combinedPerc = totalRec > 0 ? ((combinedQty / totalRec) * 100).toFixed(2) + '%' : '0.00%';
+ 
+                const rangeDisplay = (fromDate && toDate) ? `${fromDate} to ${toDate}` : 'All Dates (No Filter Selected)';
+                
+                const elDispRange = document.getElementById('ossla_displayDateRange');
+               if(elDispRange) elDispRange.innerText = rangeDisplay;
+ 
+                const elRec = document.getElementById('ossla_cardReceived');
+               if(elRec) elRec.innerText = totalRec.toLocaleString();
+                
+                const elMiss = document.getElementById('ossla_cardMiss');
+               if(elMiss) {
+                   elMiss.innerText = totalMiss.toLocaleString();
+                   elMiss.style.color = totalMiss > 0 ? 'var(--ossla-danger)' : 'var(--ossla-success)';
+                }
+                const elMissPerc = document.getElementById('ossla_cardMissPerc');
+               if(elMissPerc) {
+                   const missPercVal = totalRec > 0 ? ((totalMiss/totalRec)*100) : 0;
+                   elMissPerc.innerText = missPercVal.toFixed(2) + '%';
+                   elMissPerc.style.color = totalMiss > 0 ? 'var(--ossla-danger)' : 'var(--ossla-success)';
+                }
+ 
+                const elSide = document.getElementById('ossla_cardSideline');
+               if(elSide) {
+                   elSide.innerText = totalSide.toLocaleString();
+                   elSide.style.color = totalSide > 0 ? 'var(--ossla-warning)' : 'var(--ossla-success)';
+                }
+                const elSidePerc = document.getElementById('ossla_cardSidePerc');
+               if(elSidePerc) {
+                   const sidePercVal = totalRec > 0 ? ((totalSide/totalRec)*100) : 0;
+                   elSidePerc.innerText = sidePercVal.toFixed(2) + '%';
+                   elSidePerc.style.color = totalSide > 0 ? 'var(--ossla-warning)' : 'var(--ossla-success)';
+                }
+ 
+                const elComb = document.getElementById('ossla_cardCombinedPerc');
+               if(elComb) elComb.innerText = combinedPerc;
+ 
+               document.getElementById('ossla_panelMiss2_5').innerText = m2_5.toLocaleString();
+               document.getElementById('ossla_panelPerc2_5').innerText = (totalRec > 0 ? (m2_5/totalRec)*100 : 0).toFixed(2) + '%';
+               document.getElementById('ossla_panelMiss5_up').innerText = m5_up.toLocaleString();
+               document.getElementById('ossla_panelPerc5_up').innerText = (totalRec > 0 ? (m5_up/totalRec)*100 : 0).toFixed(2) + '%';
+               document.getElementById('ossla_panelTotalMiss').innerText = totalMiss.toLocaleString();
+ 
+               document.getElementById('ossla_panelSide2_5').innerText = s2_5.toLocaleString();
+               document.getElementById('ossla_panelSidePerc2_5').innerText = (totalRec > 0 ? (s2_5/totalRec)*100 : 0).toFixed(2) + '%';
+               document.getElementById('ossla_panelSide5_up').innerText = s5_up.toLocaleString();
+               document.getElementById('ossla_panelSidePerc5_up').innerText = (totalRec > 0 ? (s5_up/totalRec)*100 : 0).toFixed(2) + '%';
+               document.getElementById('ossla_panelTotalSide').innerText = totalSide.toLocaleString();
+ 
+               ossla_renderCombinedRingChart(combinedQty, totalRec);
+
+               ossla_renderMissTable();
+               ossla_renderSidelineTable();
+ 
+                const tbody = document.getElementById('ossla_detailsTableBody');
+               if(tbody) {
+                   tbody.innerHTML = "";
+                   ossla_parsedRows.forEach(r => {
+                       const tr = document.createElement('tr');
+                       tr.innerHTML = `
+                           <td>${r.received_scannable_id}</td>
+                           <td>${r.warehouse_id}</td>
+                           <td style="color: var(--ossla-success); font-weight: bold;">${r.fc}</td>
+                           <td>${r.inbound_ship_appointment_id}</td>
+                           <td><strong>${r.asin}</strong></td>
+                           <td>${r.received_qty}</td>
+                           <td>${r.received_container_type}</td>
+                           <td>${r.dwell}</td>
+                           <td>${r.received_on_day}</td>
+                           <td><span style="color: ${r.ossla_miss === 'Yes' ? 'var(--ossla-danger)' : 'var(--ossla-success)'}; font-weight: bold;">${r.ossla_miss}</span></td>
+                           <td style="color: var(--ossla-warning); font-weight: bold;">${r.iss_tt_no}</td>
+                           <td>${r.iss_title}</td>
+                           <td><span style="color: ${r.xlookup_match.includes('Found') ? 'var(--ossla-warning)' : 'var(--ossla-muted)'};">${r.xlookup_match}</span></td>
+                           <td><span style="color: ${r.STATUS.includes('Sideline') ? 'var(--ossla-warning)' : (r.STATUS.includes('Miss') ? 'var(--ossla-danger)' : 'inherit')}; font-weight: bold;">${r.STATUS}</span></td>
+                       `;
+                       tbody.appendChild(tr);
+                   });
+                }
+ 
+                const rowBadge = document.getElementById('ossla_rowCountBadge');
+               if(rowBadge) rowBadge.innerText = `${ossla_parsedRows.length} Rows Displayed`;
+
+               updateMasterSummaryData();
+            } catch (err) {
+               alert("Error during calculation: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🚀 Run & Execute Dashboard Analysis";
+                const expBtn = document.getElementById('ossla_exportBtn');
+               if(expBtn) expBtn.disabled = false;
+            }
+        }, 300);
+    }
+
+    function ossla_renderMissTable() {
+        const missTbody = document.getElementById('ossla_missTableBody');
+        if(!missTbody) return;
+        missTbody.innerHTML = "";
+        if(ossla_missYesRows.length === 0) {
+            missTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--ossla-muted);">No OSSLA Miss items found.</td></tr>`;
+        } else {
+            ossla_missYesRows.forEach(mr => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${mr.asin}</strong></td>
+                    <td style="color: var(--ossla-success); font-weight: bold;">${mr.fc}</td>
+                    <td style="color: var(--ossla-accent); font-weight: bold;">${mr.container}</td>
+                    <td style="color: var(--ossla-accent); font-weight: bold;">${mr.date}</td>
+                    <td style="color: var(--ossla-danger); font-weight: bold;">${mr.total_qty.toLocaleString()}</td>
+                    <td>${mr.dwell} hrs</td>
+                    <td><span style="color: var(--ossla-danger); font-weight: bold;">${mr.status}</span></td>
+                `;
+                missTbody.appendChild(tr);
+            });
+        }
+    }
+
+    function ossla_renderSidelineTable() {
+        const sidelineTbody = document.getElementById('ossla_sidelineTableBody');
+        if(!sidelineTbody) return;
+        sidelineTbody.innerHTML = "";
+        if(ossla_sidelineRows.length === 0) {
+            sidelineTbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--ossla-muted);">No Sideline items found.</td></tr>`;
+        } else {
+            ossla_sidelineRows.forEach(sr => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${sr.asin}</strong></td>
+                    <td style="color: var(--ossla-success); font-weight: bold;">${sr.fc}</td>
+                    <td style="color: var(--ossla-accent); font-weight: bold;">${sr.container}</td>
+                    <td style="color: var(--ossla-accent); font-weight: bold;">${sr.date}</td>
+                    <td style="color: var(--ossla-warning); font-weight: bold;">${sr.total_qty.toLocaleString()}</td>
+                    <td>${sr.dwell} hrs</td>
+                    <td style="color: var(--ossla-warning); font-weight: bold;">${sr.tt}</td>
+                    <td>${sr.title}</td>
+                    <td><span style="color: var(--ossla-warning); font-weight: bold;">${sr.status}</span></td>
+                `;
+                sidelineTbody.appendChild(tr);
+            });
+        }
+    }
+ 
+    function ossla_renderCombinedRingChart(combinedQty, total) {
+        const combinedRatio = total > 0 ? (combinedQty / total) * 100 : 0;
+        const rText = document.getElementById('ossla_ringText');
+       if(rText) rText.innerText = combinedRatio.toFixed(2) + '%';
+ 
+        const canvas = document.getElementById('ossla_overallRingChart');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (ossla_ringChart) {
+           ossla_ringChart.destroy();
+        }
+       ossla_ringChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+               datasets: [{
+                    data: [combinedQty, Math.max(0, total - combinedQty)],
+                    backgroundColor: ['#a855f7', '#1e293b'],
+                    borderWidth: 0
+               }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '80%',
+                plugins: { tooltip: { enabled: false } }
+            }
+        });
+    }
+ 
+    function ossla_exportMissCSV(filename) {
+        if (ossla_missYesRows.length === 0) return alert("No OSSLA Miss rows to export.");
+ 
+        const headers = ["asin", "fc", "container_type", "date", "total_qty", "avg_dwell", "status"];
+        let csvContent = headers.join(",") + "\n";
+       ossla_missYesRows.forEach(r => {
+            csvContent += [`"${r.asin}"`, `"${r.fc}"`, `"${r.container}"`, `"${r.date}"`, r.total_qty, r.dwell, `"${r.status}"`].join(",") + "\n";
+        });
+ 
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+       link.setAttribute("download", filename);
+       document.body.appendChild(link);
+        link.click();
+       document.body.removeChild(link);
+    }
+ 
+    function ossla_exportSidelineCSV(filename) {
+        if (ossla_sidelineRows.length === 0) return alert("No Sideline rows to export.");
+ 
+        const headers = ["asin", "fc", "container_type", "date", "total_qty", "avg_dwell", "iss_tt_no", "iss_title", "status"];
+        let csvContent = headers.join(",") + "\n";
+       ossla_sidelineRows.forEach(r => {
+            csvContent += [`"${r.asin}"`, `"${r.fc}"`, `"${r.container}"`, `"${r.date}"`, r.total_qty, r.dwell, `"${r.tt}"`, `"${r.title}"`, `"${r.status}"`].join(",") + "\n";
+        });
+ 
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+       link.setAttribute("download", filename);
+       document.body.appendChild(link);
+        link.click();
+       document.body.removeChild(link);
+    }
+ 
+    function ossla_exportDetailedCSV(filename) {
+        if (ossla_parsedRows.length === 0) return;
+ 
+        const headers = [
+           "received_scannable_id", "warehouse_id", "fc", "inbound_ship_appointment_id", 
+           "asin", "received_qty", "received_container_type", "dwell", 
+           "received_on_day", "ossla_miss", "iss_tt_no", "iss_title", "xlookup_match", "STATUS"
+        ];
+ 
+        let csvContent = headers.join(",") + "\n";
+       ossla_parsedRows.forEach(r => {
+            csvContent += [
+                r.received_scannable_id, r.warehouse_id, `"${r.fc}"`, r.inbound_ship_appointment_id,
+                r.asin, r.received_qty, r.received_container_type, r.dwell, 
+                r.received_on_day, `"${r.ossla_miss}"`, `"${r.iss_tt_no}"`, `"${r.iss_title}"`, 
+                `"${r.xlookup_match}"`, `"${r.STATUS}"`
+            ].join(",") + "\n";
+        });
+ 
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+       link.setAttribute("download", filename);
+       document.body.appendChild(link);
+        link.click();
+       document.body.removeChild(link);
+    }
+</script>
+</body>
+</html>
